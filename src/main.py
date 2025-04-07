@@ -32,7 +32,7 @@ if __name__ == "__main__":
         warehouse_node=warehouse_node_val,
     )
 
-    solutions = Generator.generate_many_feasible(problem_instance, 3, 10e5)
+    solutions = Generator.generate_many_feasible(problem_instance, 3, 10e4)
 
     if solutions:
         for idx, solution in enumerate(solutions, start=1):
