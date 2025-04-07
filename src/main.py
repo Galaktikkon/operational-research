@@ -1,3 +1,5 @@
+from time import perf_counter
+
 from classes.generator import Generator
 from classes.courier import Courier
 from classes.package import Package
@@ -32,7 +34,9 @@ if __name__ == "__main__":
         warehouse_node=warehouse_node_val,
     )
 
+    start_time = perf_counter()
     solutions = Generator.generate_many_feasible(problem_instance, 3, 10e4)
+    end_time = perf_counter()
 
     if solutions:
         for idx, solution in enumerate(solutions, start=1):
@@ -50,3 +54,4 @@ if __name__ == "__main__":
             print("\nVehicle Distances (d_j):")
             print(solution.d_j)
             print(f"\nObjective Function Value: {solution.objective_value:.2f}")
+            print(f"Time elapsed: {(end_time - start_time):.4f} s")
