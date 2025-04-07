@@ -42,9 +42,20 @@ class Generator:
         vehicle_packages: Dict[int, List[int]] = {vid: [] for vid in vehicle_ids}
         for vid in vehicle_ids:
             current_capacity = problem.vehicles[vid].capacity
+            
+            # find the courier that uses this vehicle
+            current_courier = None
+            for cid in courier_ids:
+                if z_ij[(cid, vid)] == 1:
+                    current_courier = cid
+                    break
+            if current_courier is None:
+                return None
+
             for pid in package_ids:
                 if not package_assigned[pid] and y_kj.get((pid, vid), 0) == 0:
-                    if problem.packages[pid].weight <= current_capacity:
+                    if (problem.packages[pid].weight <= current_capacity
+                        and problem.packages[pid].start_time < problem.couriers[current_courier].work_limit):
                         vehicle_packages[vid].append(pid)
                         y_kj[(pid, vid)] = 1
                         package_assigned[pid] = True
