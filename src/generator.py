@@ -13,7 +13,7 @@ class Generator:
 
     def generate_random_solution(self) -> Optional[Solution]:
         problem = self.problem
-        x_uvj = np.zeros((problem.n_nodes, problem.n_nodes, problem.n_vehicles))
+        x_juv = np.zeros((problem.n_vehicles, problem.n_nodes, problem.n_nodes))
         y_kj = np.zeros((problem.n_packages, problem.n_vehicles))
         z_ij = np.zeros((problem.n_couriers, problem.n_vehicles))
 
@@ -36,14 +36,14 @@ class Generator:
 
                 vehicle_route = np.random.permutation(vehicle_route)
 
-                x_uvj[problem.graph.warehouse, vehicle_route[0], j] = 1
+                x_juv[j, problem.graph.warehouse, vehicle_route[0]] = 1
 
                 for u, v in zip(vehicle_route, vehicle_route[1:]):
-                    x_uvj[u, v, j] = 1
+                    x_juv[j, u, v] = 1
 
-                x_uvj[vehicle_route[-1], problem.graph.warehouse, j] = 1
+                x_juv[j, vehicle_route[-1], problem.graph.warehouse] = 1
 
-        return Solution(problem, x_uvj, y_kj, z_ij)
+        return Solution(problem, x_juv, y_kj, z_ij)
 
     def generate_many_feasible(
         self,

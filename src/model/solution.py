@@ -6,17 +6,17 @@ class Solution:
     def __init__(
         self,
         problem: Problem,
-        x_uvj: np.ndarray,
+        x_juv: np.ndarray,
         y_kj: np.ndarray,
         z_ij: np.ndarray,
     ):
         self.problem = problem
-        self.x_uvj = x_uvj
+        self.x_juv = x_juv
         self.z_ij = z_ij
         self.y_kj = y_kj
 
     def __hash__(self):
-        x_hashable = tuple(self.x_uvj.flatten().tolist())
+        x_hashable = tuple(self.x_juv.flatten().tolist())
         y_hashable = tuple(self.y_kj.flatten().tolist())
         z_hashable = tuple(self.z_ij.flatten().tolist())
 
@@ -27,7 +27,7 @@ class Solution:
             return False
 
         return (
-            np.all(self.x_uvj == value.x_uvj)
+            np.all(self.x_juv == value.x_juv)
             and np.all(self.y_kj == value.y_kj)
             and np.all(self.z_ij == value.z_ij)
         )
@@ -48,7 +48,7 @@ class Solution:
 
             while True:
                 v = route[-1]
-                next_v = self.x_uvj[v, :, j].argmax()
+                next_v = self.x_juv[j, v].argmax()
                 if next_v == self.problem.graph.warehouse:
                     break
                 v = next_v

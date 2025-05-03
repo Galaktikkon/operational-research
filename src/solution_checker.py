@@ -18,22 +18,28 @@ class SolutionChecker:
             self.s_uv[u, v] = dist
             self.g_uv[u, v] = time
 
+    def calc_t_i(self):
+        n_nodes = self.problem.graph.n_nodes
+
         self.t_i = np.zeros(self.problem.n_couriers)
         for i in range(self.problem.n_couriers):
             for j in range(self.problem.n_vehicles):
                 s = 0
                 for u in range(n_nodes):
                     for v in range(n_nodes):
-                        s += self.s_uv[u, v] * self.solution.x_uvj[u, v, j]
+                        s += self.s_uv[u, v] * self.solution.x_juv[j, u, v]
 
                 self.t_i[i] += self.solution.z_ij[i, j] * s
+
+    def calc_v_k(self):
+        n_nodes = self.problem.graph.n_nodes
 
         self.l_vj = np.zeros((n_nodes, self.problem.n_vehicles))
         for j in range(self.problem.n_vehicles):
             v = self.problem.graph.warehouse
 
             while True:
-                next_v = self.solution.x_uvj[v, :, j].argmax()
+                next_v = self.solution.x_juv[j, v].argmax()
 
                 if next_v == self.problem.graph.warehouse:
                     break
@@ -51,7 +57,9 @@ class SolutionChecker:
         self.solution = solution
         self.prepare_check()
 
-        func_names = [key for key in dir(self) if "_SolutionChecker__check" in key]
+        func_names = sorted(
+            [key for key in dir(self) if "_SolutionChecker__check" in key]
+        )
         funcs = [getattr(self, key) for key in func_names]
 
         for func, name in zip(funcs, func_names):
@@ -72,6 +80,7 @@ class SolutionChecker:
         return np.all(self.solution.y_kj.sum(axis=1) == 1)
 
     def __check_4(self):
+        self.calc_t_i()
         b_i = np.array([c.work_limit for c in self.problem.couriers])
         return np.all(self.t_i <= b_i)
 
@@ -88,7 +97,7 @@ class SolutionChecker:
             for j in range(self.problem.n_vehicles):
                 s = 0
                 for u in range(self.problem.graph.n_nodes):
-                    s += self.solution.x_uvj[u, p.address, j]
+                    s += self.solution.x_juv[j, u, p.address]
 
                 if not self.solution.y_kj[k, j] <= s:
                     return False
@@ -96,6 +105,7 @@ class SolutionChecker:
         return True
 
     def __check_7(self):
+        self.calc_v_k()
         a = np.array([p.start_time for p in self.problem.packages])
         b = np.array([p.end_time for p in self.problem.packages])
 
@@ -107,7 +117,7 @@ class SolutionChecker:
 
             for v in range(self.problem.graph.n_nodes):
                 if v != self.problem.graph.warehouse:
-                    s += self.solution.x_uvj[self.problem.graph.warehouse, v, j]
+                    s += self.solution.x_juv[j, self.problem.graph.warehouse, v]
 
             if s > 1:
                 return False
@@ -121,10 +131,10 @@ class SolutionChecker:
 
             for v in range(self.problem.graph.n_nodes):
                 if v != self.problem.graph.warehouse:
-                    s1 += self.solution.x_uvj[self.problem.graph.warehouse, v, j]
-                    s2 += self.solution.x_uvj[v, self.problem.graph.warehouse, j]
+                    s1 += self.solution.x_juv[j, self.problem.graph.warehouse, v]
+                    s2 += self.solution.x_juv[j, v, self.problem.graph.warehouse]
 
-            if s1 != s2:
+            if s1 != s2 or s1 > 1:
                 return False
 
         return True
@@ -136,10 +146,10 @@ class SolutionChecker:
                     s1 = 0
                     s2 = 0
                     for u in range(self.problem.graph.n_nodes):
-                        s1 += self.solution.x_uvj[u, v, j]
-                        s2 += self.solution.x_uvj[v, u, j]
+                        s1 += self.solution.x_juv[j, u, v]
+                        s2 += self.solution.x_juv[j, v, u]
 
-                    if s1 != s2:
+                    if s1 != s2 or s1 > 1:
                         return False
 
         return True
@@ -160,7 +170,7 @@ class SolutionChecker:
             v = self.problem.graph.warehouse
 
             while True:
-                next_v = self.solution.x_uvj[v, :, j].argmax()
+                next_v = self.solution.x_juv[j, v].argmax()
 
                 if next_v == self.problem.graph.warehouse:
                     break
