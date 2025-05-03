@@ -3,7 +3,7 @@ from model.input import *
 
 class Problem:
     """
-    permissions : list[(courier_ix, vehicle_ix)]
+    permissions : list[(courier, vehicle)]
     """
 
     def __init__(
@@ -14,6 +14,9 @@ class Problem:
         permissions: list[tuple[int, int]],
         graph: Graph,
     ):
+        """
+        permissions : list[(courier, vehicle)]
+        """
         self.couriers = couriers
         self.vehicles = vehicles
         self.packages = packages
@@ -29,11 +32,13 @@ class Problem:
     def __repr__(self):
         rows = (
             ["Couriers"]
-            + [str(c) for c in self.couriers]
+            + [f"{i}: {str(c)}" for i, c in enumerate(self.couriers)]
             + ["\nVehicles"]
-            + [str(v) for v in self.vehicles]
+            + [f"{j}: {str(v)}" for j, v in enumerate(self.vehicles)]
             + ["\nPackages"]
-            + [str(p) for p in self.packages]
+            + [f"{k}: {str(p)}" for k, p in enumerate(self.packages)]
+            + ["\nGraph"]
+            + [str(self.graph)]
             + [""]
         )
         return "\n".join(rows)

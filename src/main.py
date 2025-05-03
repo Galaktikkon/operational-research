@@ -11,11 +11,12 @@ def main():
     print(problem)
 
     start_time = perf_counter()
-    solutions = generator.generate_many_feasible(1000)
+    solutions = generator.generate_many_feasible(max_attempts=100)
     end_time = perf_counter()
 
     for idx, solution in enumerate(solutions, start=1):
         print(f"\n--- Solution {idx} ---")
         print(solution)
+        break
 
     print(f"Time elapsed: {(end_time - start_time):.4f}s")

@@ -28,11 +28,13 @@ class Generator:
 
                 vehicle_packages = y_kj[:, j].nonzero()[0]
 
-                vehicle_route = [
-                    p.address
-                    for k, p in enumerate(self.problem.packages)
-                    if k in vehicle_packages
-                ]
+                vehicle_route = list(
+                    {
+                        p.address
+                        for k, p in enumerate(self.problem.packages)
+                        if k in vehicle_packages
+                    }
+                )
 
                 vehicle_route = np.random.permutation(vehicle_route)
 
@@ -66,8 +68,6 @@ class Generator:
                 if candidate not in feasible_solutions:
                     feasible_solutions.add(candidate)
 
-        # sys.stdout.write("\r" + " " * 80 + "\r")
-        # sys.stdout.flush()
         print()
 
         return list(feasible_solutions)

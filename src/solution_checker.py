@@ -176,8 +176,7 @@ class SolutionChecker:
                     break
 
                 delivery = 0
-                for k in range(self.problem.n_packages):
-                    p = self.problem.packages[k]
+                for k, p in enumerate(self.problem.packages):
                     if (
                         p.type == "delivery"
                         and p.address == next_v
@@ -186,8 +185,7 @@ class SolutionChecker:
                         delivery += p.weight
 
                 pickup = 0
-                for k in range(self.problem.n_packages):
-                    p = self.problem.packages[k]
+                for k, p in enumerate(self.problem.packages):
                     if (
                         p.type == "pickup"
                         and p.address == next_v
