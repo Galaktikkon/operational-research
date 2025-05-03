@@ -25,3 +25,15 @@ class Problem:
         self.n_vehicles = len(vehicles)
         self.n_packages = len(packages)
         self.n_nodes = graph.n_nodes
+
+    def __repr__(self):
+        rows = (
+            ["Couriers"]
+            + [str(c) for c in self.couriers]
+            + ["\nVehicles"]
+            + [str(v) for v in self.vehicles]
+            + ["\nPackages"]
+            + [str(p) for p in self.packages]
+            + [""]
+        )
+        return "\n".join(rows)

@@ -18,12 +18,12 @@ class Generator:
         z_ij = np.zeros((problem.n_couriers, problem.n_vehicles))
 
         for k in range(self.problem.n_packages):
-            j = np.random.randint(0, problem.n_vehicles)
+            j = np.random.randint(problem.n_vehicles)
             y_kj[k, j] = 1
 
         for j in range(self.problem.n_vehicles):
             if np.any(y_kj[:, j] == 1):
-                i = np.random.randint(0, problem.n_couriers)
+                i = np.random.randint(problem.n_couriers)
                 z_ij[i, j] = 1
 
                 vehicle_packages = y_kj[:, j].nonzero()[0]
@@ -43,7 +43,7 @@ class Generator:
 
                 x_uvj[vehicle_route[-1], problem.graph.warehouse, j] = 1
 
-        return Solution(x_uvj, y_kj, z_ij)
+        return Solution(problem, x_uvj, y_kj, z_ij)
 
     def generate_many_feasible(
         self,

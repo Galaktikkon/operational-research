@@ -99,7 +99,7 @@ class SolutionChecker:
         a = np.array([p.start_time for p in self.problem.packages])
         b = np.array([p.end_time for p in self.problem.packages])
 
-        return np.all(a <= self.v_k <= b)
+        return np.all((a <= self.v_k) & (self.v_k <= b))
 
     def __check_8(self):
         for j in range(self.problem.n_vehicles):
