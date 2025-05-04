@@ -1,5 +1,6 @@
 import numpy as np
 from .problem import Problem
+from random import sample
 
 
 class Solution:
@@ -117,3 +118,12 @@ class Solution:
         self.d_j = np.zeros(self.problem.n_vehicles)
         for j in range(self.problem.n_vehicles):
             self.d_j[j] = np.sum(self.x_juv[j] * self.problem.g_uv)
+
+    def swap_random_pair(self, list_):
+        indices = [i for i in range(len(list_))]
+        first, second = sample(indices, 2)
+        list_[first], list_[second] = list_[second], list_[first]
+
+    def __invert__(self):
+        self.swap_random_pair(self.z_ij)
+        self.swap_random_pair(self.y_kj)
