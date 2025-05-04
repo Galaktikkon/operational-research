@@ -24,6 +24,12 @@ class Generator:
         for j in range(self.problem.n_vehicles):
             if np.any(y_kj[:, j] == 1):
                 i = np.random.randint(problem.n_couriers)
+                tries = 0
+                max_tries = 2 * problem.n_couriers
+                while (i, j) not in problem.permissions and tries < max_tries:
+                    tries += 1
+                    i = np.random.randint(problem.n_couriers)
+
                 z_ij[i, j] = 1
 
                 vehicle_packages = y_kj[:, j].nonzero()[0]

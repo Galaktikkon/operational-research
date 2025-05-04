@@ -14,16 +14,19 @@ class ProblemInitializer:
         )
 
     def __init__(self):
-        self.couriers = [self.random_courier() for _ in range(20)]
+        self.couriers = [self.random_courier() for _ in range(10)]
 
-        self.vehicles = [self.random_vehicle() for _ in range(20)]
+        self.vehicles = [self.random_vehicle() for _ in range(10)]
 
         self.permissions = self.random_permissions(0.7)
 
-        routes = self.random_routes(50, max_coord=50)
-        self.graph = Graph(routes)
+        max_address = 20
+        self.packages = [self.random_package(max_address) for _ in range(20)]
+        addresses = np.unique([p.address for p in self.packages])
+        for p in self.packages:
+            p.address = np.where(p.address == addresses)[0][0] + 1
 
-        self.packages = [self.random_package() for _ in range(20)]
+        self.graph = self.random_graph(len(addresses) + 1, max_coord=50)
 
     def random_courier(self):
         rate = np.random.randint(100)
@@ -46,12 +49,10 @@ class ProblemInitializer:
             if np.random.rand() < permission_proba
         ]
 
-    def random_package(self):
-        n_nodes = self.graph.n_nodes
-
-        address = np.random.randint(n_nodes)
-        while address == self.graph.warehouse:
-            address = np.random.randint(n_nodes)
+    def random_package(self, max_address, warehouse=0):
+        address = np.random.randint(max_address)
+        while address == warehouse:
+            address = np.random.randint(max_address)
 
         weight = np.round(np.random.rand() * 10, 2)
         start_time = 0  # np.random.randint(1, 2) * 60
@@ -60,7 +61,7 @@ class ProblemInitializer:
 
         return Package(address, weight, start_time, end_time, type)
 
-    def random_routes(self, n_nodes, max_coord=100):
+    def random_graph(self, n_nodes, max_coord=100):
         points = np.random.uniform(0, max_coord, (n_nodes, 2))
 
         routes = []
@@ -72,4 +73,4 @@ class ProblemInitializer:
 
                 routes.append((i, j, dist, time))
 
-        return routes
+        return Graph(routes, points)

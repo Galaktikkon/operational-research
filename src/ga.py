@@ -1,13 +1,16 @@
 import numpy as np
 from model.solution import Solution
 from model.problem import Problem
+from solution_checker import SolutionChecker
 
 
 class GA:
-    def __init__(self, problem: Problem):
+    def __init__(self, problem: Problem, initial_population: list[Solution]):
         self.problem = problem
+        self.checker = SolutionChecker(problem)
         self.C = 6
         self.alpha = 0.1
+        self.initial_population = initial_population
 
     def get_score(self, solution: Solution):
         solution.calc_t_i()
