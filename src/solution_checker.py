@@ -25,10 +25,8 @@ class SolutionChecker:
         return True
 
     def __check_1(self):
-        return np.all(self.solution.z_ij.sum(axis=1) <= 1)
-
-    def __check_2(self):
-        return np.all(self.solution.z_ij.sum(axis=0) <= 1)
+        non_empty = self.solution.z_ij != -1
+        return np.unique(self.solution.z_ij[non_empty]).size == non_empty.sum()
 
     def __check_3(self):
         return np.all(self.solution.y_kj.sum(axis=1) == 1)
@@ -42,7 +40,7 @@ class SolutionChecker:
         r_ij = np.zeros_like(self.solution.z_ij)
 
         for courier, vehicle in self.problem.permissions:
-            r_ij[courier, vehicle] = 1
+            r_ij[vehicle] = courier
 
         return np.all(self.solution.z_ij <= r_ij)
 

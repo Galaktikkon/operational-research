@@ -22,7 +22,7 @@ class Solution:
     def __hash__(self):
         x_hashable = tuple(self.x_juv.flatten().tolist())
         y_hashable = tuple(self.y_kj.flatten().tolist())
-        z_hashable = tuple(self.z_ij.flatten().tolist())
+        z_hashable = tuple(self.z_ij.tolist())
 
         return hash((x_hashable, y_hashable, z_hashable))
 
@@ -39,7 +39,9 @@ class Solution:
     def __repr__(self):
         rows = []
 
-        for i, j in zip(*self.z_ij.nonzero()):
+        for j, i in enumerate(self.z_ij):
+            if i == -1:
+                continue
             courier = self.problem.couriers[i]
             vehicle = self.problem.vehicles[j]
 
@@ -80,7 +82,8 @@ class Solution:
                     for v in range(n_nodes):
                         s += self.problem.s_uv[u, v] * self.x_juv[j, u, v]
 
-                self.t_i[i] += self.z_ij[i, j] * s
+                z_ij = 1 if self.z_ij[j] == i else 0
+                self.t_i[i] += z_ij * s
 
     def calc_v_k(self):
         if self.v_k is not None:
