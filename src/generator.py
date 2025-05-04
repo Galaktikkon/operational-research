@@ -17,8 +17,8 @@ class Generator:
         y_kj = np.zeros((problem.n_packages, problem.n_vehicles))
         z_ij = np.full(problem.n_vehicles, -1)
 
-        for k in range(self.problem.n_packages):
-            j = np.random.randint(self.problem.n_vehicles)
+        for k in range(problem.n_packages):
+            j = np.random.randint(problem.n_vehicles)
             y_kj[k, j] = 1
 
         for j in y_kj.sum(axis=0).nonzero()[0]:

@@ -1,5 +1,7 @@
 import numpy as np
 from .problem import Problem
+from typing import NoReturn, Union
+import random
 
 
 class Solution:
@@ -117,3 +119,44 @@ class Solution:
         self.d_j = np.zeros(self.problem.n_vehicles)
         for j in range(self.problem.n_vehicles):
             self.d_j[j] = np.sum(self.x_juv[j] * self.problem.g_uv)
+
+    def __add__(self, other: "Solution") -> Union[NoReturn, "Solution"]:
+        """Crossing between two solutions.
+        Args:
+            other (Solution): other solution to cross with.
+        Returns:
+            Solution: offspring solution.
+        Raises:
+            TypeError: Crossing allowed only between two solutions.
+        """
+
+        if not isinstance(other, Solution):
+            raise TypeError("Crossing allowed only between two solutions.")
+
+        offspring = Solution(
+            self.problem,
+            np.zeros_like(self.x_juv),
+            np.zeros_like(self.y_kj),
+            np.zeros_like(self.z_ij),
+        )
+
+        z1 = self.z_ij
+        z2 = other.z_ij
+
+        permissions = offspring.problem.permissions
+
+        for j in range(len(offspring.z_ij)):
+            selected_driver = random.choice([z1[j], z2[j], None])
+
+            if selected_driver is not None and permissions[selected_driver, j]:
+                offspring.z_ij[j] = selected_driver
+            else:
+                valid_drivers = [
+                    i for i in range(permissions.shape[0]) if permissions[i, j] == 1
+                ]
+                if valid_drivers:
+                    offspring.z_ij[j] = random.choice(valid_drivers)
+                else:
+                    offspring.z_ij[j] = None
+
+        return offspring
