@@ -1,6 +1,6 @@
 import numpy as np
 from .problem import Problem
-from random import sample
+from random import sample, choice
 
 
 class Solution:
@@ -121,14 +121,20 @@ class Solution:
 
     def swap_random_pair_1D(self, list_):
         indices = [i for i in range(len(list_))]
+        if len(indices) <= 2:
+            return
         first, second = sample(indices, 2)
         list_[first], list_[second] = list_[second], list_[first]
 
     def swap_random_pair_2D(self, matrix):
-        non_zero = matrix.nonzero()
-        first, second = sample(non_zero, 2)
-        i1, j1 = first
-        i2, j2 = second
+        non_zeros = np.argwhere(matrix != 0)
+        zeros = np.argwhere(matrix == 0)
+        if not (non_zeros and zeros):
+            return
+        zero = choice(zeros)
+        non_zero = choice(non_zeros)
+        i1, j1 = zero
+        i2, j2 = non_zero
         matrix[i1, j1], matrix[i2, j2] = matrix[i2, j2], matrix[i1, j1]
 
     def __invert__(self):
