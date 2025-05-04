@@ -14,33 +14,32 @@ class Generator:
     def generate_solution(self) -> Optional[Solution]:
         problem = self.problem
         x_juv = np.zeros((problem.n_vehicles, problem.n_nodes, problem.n_nodes))
-        y_kj = np.zeros((problem.n_packages, problem.n_vehicles))
-        z_ij = np.full(problem.n_vehicles, -1)
+        y_k = np.full(problem.n_packages, -1, dtype=int)
+        z_j = np.full(problem.n_vehicles, -1, dtype=int)
 
-        for k in range(problem.n_packages):
-            j = np.random.randint(problem.n_vehicles)
-            y_kj[k, j] = 1
+        for k in range(self.problem.n_packages):
+            y_k[k] = np.random.randint(self.problem.n_vehicles)
 
-        for j in y_kj.sum(axis=0).nonzero()[0]:
+        for j in np.unique(y_k):
             i = np.random.randint(problem.n_couriers)
             tries = 0
             max_tries = 2 * problem.n_couriers
-            while (i, j) not in problem.permissions or i in z_ij:
+            while (i, j) not in problem.permissions or i in z_j:
                 i = np.random.randint(problem.n_couriers)
                 tries += 1
                 if tries == max_tries:
                     break
 
-            z_ij[j] = i
+            z_j[j] = i
 
-            vehicle_packages = y_kj[:, j].nonzero()[0]
+            vehicle_packages = np.where(y_k == j)[0]
 
-            vehicle_route = list(
-                {
+            vehicle_route = np.unique(
+                [
                     p.address
                     for k, p in enumerate(self.problem.packages)
                     if k in vehicle_packages
-                }
+                ]
             )
 
             vehicle_route = np.random.permutation(vehicle_route)
@@ -52,7 +51,7 @@ class Generator:
 
             x_juv[j, vehicle_route[-1], problem.graph.warehouse] = 1
 
-        return Solution(problem, x_juv, y_kj, z_ij)
+        return Solution(problem, x_juv, y_k, z_j)
 
     def generate_many_feasible(
         self,

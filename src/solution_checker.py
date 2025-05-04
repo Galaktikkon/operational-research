@@ -25,11 +25,8 @@ class SolutionChecker:
         return True
 
     def __check_1(self):
-        non_empty = self.solution.z_ij != -1
-        return np.unique(self.solution.z_ij[non_empty]).size == non_empty.sum()
-
-    def __check_3(self):
-        return np.all(self.solution.y_kj.sum(axis=1) == 1)
+        non_empty = self.solution.z_j != -1
+        return np.unique(self.solution.z_j[non_empty]).size == non_empty.sum()
 
     def __check_4(self):
         self.solution.calc_t_i()
@@ -37,22 +34,19 @@ class SolutionChecker:
         return np.all(self.solution.t_i <= b_i)
 
     def __check_5(self):
-        r_ij = np.zeros_like(self.solution.z_ij)
+        r_j = np.zeros_like(self.solution.z_j)
 
         for courier, vehicle in self.problem.permissions:
-            r_ij[vehicle] = courier
+            r_j[vehicle] = courier
 
-        return np.all(self.solution.z_ij <= r_ij)
+        return np.all(self.solution.z_j <= r_j)
 
     def __check_6(self):
         for k, p in enumerate(self.problem.packages):
-            for j in range(self.problem.n_vehicles):
-                s = 0
-                for u in range(self.problem.graph.n_nodes):
-                    s += self.solution.x_juv[j, u, p.address]
-
-                if not self.solution.y_kj[k, j] <= s:
-                    return False
+            j = self.solution.y_k[k]
+            s = self.solution.x_juv[j, :, p.address].sum()
+            if s == 0:
+                return False
 
         return True
 
@@ -112,8 +106,8 @@ class SolutionChecker:
             l_v = np.zeros((self.problem.graph.n_nodes))
             s = 0
             for k, p in enumerate(self.problem.packages):
-                if p.type == "delivery":
-                    s += self.solution.y_kj[k, j] * p.weight
+                if p.type == "delivery" and self.solution.y_k[k] == j:
+                    s += p.weight
 
             if s > veh.capacity:
                 return False
@@ -133,7 +127,7 @@ class SolutionChecker:
                     if (
                         p.type == "delivery"
                         and p.address == next_v
-                        and self.solution.y_kj[k, j]
+                        and self.solution.y_k[k] == j
                     ):
                         delivery += p.weight
 
@@ -142,7 +136,7 @@ class SolutionChecker:
                     if (
                         p.type == "pickup"
                         and p.address == next_v
-                        and self.solution.y_kj[k, j]
+                        and self.solution.y_k[k] == j
                     ):
                         pickup += p.weight
 
