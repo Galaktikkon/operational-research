@@ -7,13 +7,13 @@ class Solution:
         self,
         problem: Problem,
         x_juv: np.ndarray,
-        y_kj: np.ndarray,
+        y_k: np.ndarray,
         z_ij: np.ndarray,
     ):
         self.problem = problem
         self.x_juv = x_juv
         self.z_ij = z_ij
-        self.y_kj = y_kj
+        self.y_k = y_k
 
         self.t_i: np.ndarray | None = None
         self.v_k: np.ndarray | None = None
@@ -21,7 +21,7 @@ class Solution:
 
     def __hash__(self):
         x_hashable = tuple(self.x_juv.flatten().tolist())
-        y_hashable = tuple(self.y_kj.flatten().tolist())
+        y_hashable = tuple(self.y_k.tolist())
         z_hashable = tuple(self.z_ij.flatten().tolist())
 
         return hash((x_hashable, y_hashable, z_hashable))
@@ -32,7 +32,7 @@ class Solution:
 
         return (
             np.all(self.x_juv == value.x_juv)
-            and np.all(self.y_kj == value.y_kj)
+            and np.all(self.y_k == value.y_k)
             and np.all(self.z_ij == value.z_ij)
         )
 
@@ -45,7 +45,7 @@ class Solution:
 
             rows.append(f"{courier} {vehicle}")
 
-            for k in self.y_kj[:, j].nonzero()[0]:
+            for k in np.where(self.y_k == j)[0]:
                 rows.append(str(self.problem.packages[k]))
 
             route = [self.problem.graph.warehouse]
@@ -102,10 +102,10 @@ class Solution:
                 v = next_v
 
         self.v_k = np.zeros(self.problem.n_packages)
-        for k in range(self.problem.n_packages):
-            p = self.problem.packages[k]
+        for k, p in enumerate(self.problem.packages):
             for j in range(self.problem.n_vehicles):
-                self.v_k[k] += self.y_kj[k, j] * self.l_vj[p.address, j]
+                if self.y_k[k] == j:
+                    self.v_k[k] += self.l_vj[p.address, j]
 
     def calc_d_j(self):
         if self.d_j is not None:

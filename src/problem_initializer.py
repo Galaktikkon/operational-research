@@ -14,13 +14,15 @@ class ProblemInitializer:
         )
 
     def __init__(self):
-        self.couriers = [self.random_courier() for _ in range(15)]
+        n_couriers = 50
+        n_vehicles = 50
+        n_packages = 50
 
-        self.vehicles = [self.random_vehicle() for _ in range(20)]
+        self.couriers = [self.random_courier() for _ in range(n_couriers)]
+
+        self.vehicles = [self.random_vehicle() for _ in range(n_vehicles)]
 
         self.permissions = self.random_permissions(0.7)
-
-        n_packages = 50
 
         max_address = n_packages
         self.packages = [self.random_package(max_address) for _ in range(n_packages)]
