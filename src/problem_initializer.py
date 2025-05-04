@@ -14,13 +14,13 @@ class ProblemInitializer:
         )
 
     def __init__(self):
-        self.couriers = [self.random_courier() for _ in range(5)]
+        self.couriers = [self.random_courier() for _ in range(20)]
 
-        self.vehicles = [self.random_vehicle() for _ in range(5)]
+        self.vehicles = [self.random_vehicle() for _ in range(20)]
 
-        self.permissions = self.full_permissions()
+        self.permissions = self.random_permissions(0.7)
 
-        routes = self.random_routes(20)
+        routes = self.random_routes(50, max_coord=50)
         self.graph = Graph(routes)
 
         self.packages = [self.random_package() for _ in range(20)]
@@ -35,11 +35,16 @@ class ProblemInitializer:
         fuel = np.round(np.random.rand() * 20, 2)
         return Vehicle(capacity, fuel)
 
-    def full_permissions(self):
+    def random_permissions(self, permission_proba):
         n = len(self.couriers)
         m = len(self.vehicles)
 
-        return [(i, j) for i in range(n) for j in range(m)]
+        return [
+            (i, j)
+            for i in range(n)
+            for j in range(m)
+            if np.random.rand() < permission_proba
+        ]
 
     def random_package(self):
         n_nodes = self.graph.n_nodes
@@ -55,8 +60,8 @@ class ProblemInitializer:
 
         return Package(address, weight, start_time, end_time, type)
 
-    def random_routes(self, n_nodes):
-        points = np.random.uniform(0, 100, (n_nodes, 2))
+    def random_routes(self, n_nodes, max_coord=100):
+        points = np.random.uniform(0, max_coord, (n_nodes, 2))
 
         routes = []
 

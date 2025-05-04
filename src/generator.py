@@ -11,7 +11,7 @@ class Generator:
         self.problem = problem
         self.checker = SolutionChecker(problem)
 
-    def generate_random_solution(self) -> Optional[Solution]:
+    def generate_solution(self) -> Optional[Solution]:
         problem = self.problem
         x_juv = np.zeros((problem.n_vehicles, problem.n_nodes, problem.n_nodes))
         y_kj = np.zeros((problem.n_packages, problem.n_vehicles))
@@ -63,7 +63,7 @@ class Generator:
             )
             sys.stdout.flush()
 
-            candidate = self.generate_random_solution()
+            candidate = self.generate_solution()
             if candidate and self.checker.is_feasible(candidate):
                 if candidate not in feasible_solutions:
                     feasible_solutions.add(candidate)

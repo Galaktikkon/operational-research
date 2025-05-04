@@ -8,54 +8,8 @@ class SolutionChecker:
         self.problem = problem
         self.solution: Solution | None = None
 
-    def prepare_check(self):
-        n_nodes = self.problem.graph.n_nodes
-
-        self.s_uv = np.zeros((n_nodes, n_nodes))
-        self.g_uv = np.zeros((n_nodes, n_nodes))
-
-        for u, v, dist, time in self.problem.graph.routes:
-            self.s_uv[u, v] = dist
-            self.g_uv[u, v] = time
-
-    def calc_t_i(self):
-        n_nodes = self.problem.graph.n_nodes
-
-        self.t_i = np.zeros(self.problem.n_couriers)
-        for i in range(self.problem.n_couriers):
-            for j in range(self.problem.n_vehicles):
-                s = 0
-                for u in range(n_nodes):
-                    for v in range(n_nodes):
-                        s += self.s_uv[u, v] * self.solution.x_juv[j, u, v]
-
-                self.t_i[i] += self.solution.z_ij[i, j] * s
-
-    def calc_v_k(self):
-        n_nodes = self.problem.graph.n_nodes
-
-        self.l_vj = np.zeros((n_nodes, self.problem.n_vehicles))
-        for j in range(self.problem.n_vehicles):
-            v = self.problem.graph.warehouse
-
-            while True:
-                next_v = self.solution.x_juv[j, v].argmax()
-
-                if next_v == self.problem.graph.warehouse:
-                    break
-
-                self.l_vj[next_v, j] = self.l_vj[v, j] + self.s_uv[v, next_v]
-                v = next_v
-
-        self.v_k = np.zeros(self.problem.n_packages)
-        for k in range(self.problem.n_packages):
-            p = self.problem.packages[k]
-            for j in range(self.problem.n_vehicles):
-                self.v_k[k] += self.solution.y_kj[k, j] * self.l_vj[p.address, j]
-
     def is_feasible(self, solution: Solution):
         self.solution = solution
-        self.prepare_check()
 
         func_names = sorted(
             [key for key in dir(self) if "_SolutionChecker__check" in key]
@@ -80,9 +34,9 @@ class SolutionChecker:
         return np.all(self.solution.y_kj.sum(axis=1) == 1)
 
     def __check_4(self):
-        self.calc_t_i()
+        self.solution.calc_t_i()
         b_i = np.array([c.work_limit for c in self.problem.couriers])
-        return np.all(self.t_i <= b_i)
+        return np.all(self.solution.t_i <= b_i)
 
     def __check_5(self):
         r_ij = np.zeros_like(self.solution.z_ij)
@@ -105,11 +59,12 @@ class SolutionChecker:
         return True
 
     def __check_7(self):
-        self.calc_v_k()
+        self.solution.calc_v_k()
+
         a = np.array([p.start_time for p in self.problem.packages])
         b = np.array([p.end_time for p in self.problem.packages])
 
-        return np.all((a <= self.v_k) & (self.v_k <= b))
+        return np.all((a <= self.solution.v_k) & (self.solution.v_k <= b))
 
     def __check_8(self):
         for j in range(self.problem.n_vehicles):

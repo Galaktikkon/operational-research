@@ -11,7 +11,7 @@ def main():
     print(problem)
 
     start_time = perf_counter()
-    solutions = generator.generate_many_feasible(max_attempts=100)
+    solutions = generator.generate_many_feasible(max_attempts=100000)
     end_time = perf_counter()
 
     for idx, solution in enumerate(solutions, start=1):

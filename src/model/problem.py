@@ -1,3 +1,4 @@
+import numpy as np
 from model.input import *
 
 
@@ -29,10 +30,15 @@ class Problem:
         self.n_packages = len(packages)
         self.n_nodes = graph.n_nodes
 
+        self.calc_s_uv_g_uv()
+
     def __repr__(self):
         rows = (
             ["Couriers"]
-            + [f"{i}: {str(c)}" for i, c in enumerate(self.couriers)]
+            + [
+                f"{i}: {str(c)} {[t[1] for t in self.permissions if t[0] == i]}"
+                for i, c in enumerate(self.couriers)
+            ]
             + ["\nVehicles"]
             + [f"{j}: {str(v)}" for j, v in enumerate(self.vehicles)]
             + ["\nPackages"]
@@ -42,3 +48,13 @@ class Problem:
             + [""]
         )
         return "\n".join(rows)
+
+    def calc_s_uv_g_uv(self):
+        n_nodes = self.graph.n_nodes
+
+        self.s_uv = np.zeros((n_nodes, n_nodes))
+        self.g_uv = np.zeros((n_nodes, n_nodes))
+
+        for u, v, dist, time in self.graph.routes:
+            self.s_uv[u, v] = dist
+            self.g_uv[u, v] = time

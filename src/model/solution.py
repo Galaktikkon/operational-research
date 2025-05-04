@@ -15,6 +15,10 @@ class Solution:
         self.z_ij = z_ij
         self.y_kj = y_kj
 
+        self.t_i: np.ndarray | None = None
+        self.v_k: np.ndarray | None = None
+        self.d_j: np.ndarray | None = None
+
     def __hash__(self):
         x_hashable = tuple(self.x_juv.flatten().tolist())
         y_hashable = tuple(self.y_kj.flatten().tolist())
@@ -61,3 +65,52 @@ class Solution:
             rows.append("")
 
         return "\n".join(rows)
+
+    def calc_t_i(self):
+        if self.t_i is not None:
+            return
+
+        n_nodes = self.problem.graph.n_nodes
+
+        self.t_i = np.zeros(self.problem.n_couriers)
+        for i in range(self.problem.n_couriers):
+            for j in range(self.problem.n_vehicles):
+                s = 0
+                for u in range(n_nodes):
+                    for v in range(n_nodes):
+                        s += self.problem.s_uv[u, v] * self.x_juv[j, u, v]
+
+                self.t_i[i] += self.z_ij[i, j] * s
+
+    def calc_v_k(self):
+        if self.v_k is not None:
+            return
+
+        n_nodes = self.problem.graph.n_nodes
+
+        self.l_vj = np.zeros((n_nodes, self.problem.n_vehicles))
+        for j in range(self.problem.n_vehicles):
+            v = self.problem.graph.warehouse
+
+            while True:
+                next_v = self.x_juv[j, v].argmax()
+
+                if next_v == self.problem.graph.warehouse:
+                    break
+
+                self.l_vj[next_v, j] = self.l_vj[v, j] + self.problem.s_uv[v, next_v]
+                v = next_v
+
+        self.v_k = np.zeros(self.problem.n_packages)
+        for k in range(self.problem.n_packages):
+            p = self.problem.packages[k]
+            for j in range(self.problem.n_vehicles):
+                self.v_k[k] += self.y_kj[k, j] * self.l_vj[p.address, j]
+
+    def calc_d_j(self):
+        if self.d_j is not None:
+            return
+
+        self.d_j = np.zeros(self.problem.n_vehicles)
+        for j in range(self.problem.n_vehicles):
+            self.d_j[j] = np.sum(self.x_juv[j] * self.problem.g_uv)
