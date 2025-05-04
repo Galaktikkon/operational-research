@@ -84,8 +84,8 @@ class Solution:
                     for v in range(n_nodes):
                         s += self.problem.s_uv[u, v] * self.x_juv[j, u, v]
 
-                z_ij = 1 if self.z_j[j] == i else 0
-                self.t_i[i] += z_ij * s
+                if self.z_j[j] == i:
+                    self.t_i[i] += s
 
     def calc_v_k(self):
         if self.v_k is not None:

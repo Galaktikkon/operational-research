@@ -60,7 +60,7 @@ class ProblemInitializer:
 
         weight = np.round(np.random.rand() * 10, 2)
         start_time = 0  # np.random.randint(1, 2) * 60
-        end_time = np.random.randint(5, 8) * 60
+        end_time = np.random.randint(5, 9) * 60
         type = "pickup" if np.random.randint(2) else "delivery"
 
         return Package(address, weight, start_time, end_time, type)
