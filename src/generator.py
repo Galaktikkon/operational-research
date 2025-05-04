@@ -15,7 +15,7 @@ class Generator:
         problem = self.problem
         x_juv = np.zeros((problem.n_vehicles, problem.n_nodes, problem.n_nodes))
         y_kj = np.zeros((problem.n_packages, problem.n_vehicles))
-        z_ij = np.zeros(problem.n_vehicles)
+        z_ij = np.full(problem.n_vehicles, -1)
 
         for k in range(self.problem.n_packages):
             j = np.random.randint(self.problem.n_vehicles)
