@@ -162,11 +162,19 @@ class Solution:
 
         return offspring
 
-    def swap_random_pair(self, list_):
+    def swap_random_pair_1D(self, list_):
         indices = [i for i in range(len(list_))]
         first, second = sample(indices, 2)
         list_[first], list_[second] = list_[second], list_[first]
 
+    def swap_random_pair_2D(self, matrix):
+        non_zero = matrix.nonzero()
+        first, second = sample(non_zero, 2)
+        i1, j1 = first
+        i2, j2 = second
+        matrix[i1, j1], matrix[i2, j2] = matrix[i2, j2], matrix[i1, j1]
+
     def __invert__(self):
-        self.swap_random_pair(self.z_j)
-        self.swap_random_pair(self.y_kj)
+        self.swap_random_pair_1D(self.z_j)
+        self.swap_random_pair_1D(self.y_k)
+        self.swap_random_pair_2D(self.x_juv)
