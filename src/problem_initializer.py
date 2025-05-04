@@ -14,14 +14,16 @@ class ProblemInitializer:
         )
 
     def __init__(self):
-        self.couriers = [self.random_courier() for _ in range(10)]
+        self.couriers = [self.random_courier() for _ in range(15)]
 
-        self.vehicles = [self.random_vehicle() for _ in range(10)]
+        self.vehicles = [self.random_vehicle() for _ in range(20)]
 
         self.permissions = self.random_permissions(0.7)
 
-        max_address = 20
-        self.packages = [self.random_package(max_address) for _ in range(20)]
+        n_packages = 50
+
+        max_address = n_packages
+        self.packages = [self.random_package(max_address) for _ in range(n_packages)]
         addresses = np.unique([p.address for p in self.packages])
         for p in self.packages:
             p.address = np.where(p.address == addresses)[0][0] + 1

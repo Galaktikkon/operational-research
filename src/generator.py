@@ -18,38 +18,39 @@ class Generator:
         z_ij = np.zeros((problem.n_couriers, problem.n_vehicles))
 
         for k in range(self.problem.n_packages):
-            j = np.random.randint(problem.n_vehicles)
+            j = np.random.randint(self.problem.n_vehicles)
             y_kj[k, j] = 1
 
-        for j in range(self.problem.n_vehicles):
-            if np.any(y_kj[:, j] == 1):
+        for j in y_kj.sum(axis=0).nonzero()[0]:
+            i = np.random.randint(problem.n_couriers)
+            tries = 0
+            max_tries = 2 * problem.n_couriers
+            while (i, j) not in problem.permissions or z_ij[i].sum() >= 1:
                 i = np.random.randint(problem.n_couriers)
-                tries = 0
-                max_tries = 2 * problem.n_couriers
-                while (i, j) not in problem.permissions and tries < max_tries:
-                    tries += 1
-                    i = np.random.randint(problem.n_couriers)
+                tries += 1
+                if tries == max_tries:
+                    break
 
-                z_ij[i, j] = 1
+            z_ij[i, j] = 1
 
-                vehicle_packages = y_kj[:, j].nonzero()[0]
+            vehicle_packages = y_kj[:, j].nonzero()[0]
 
-                vehicle_route = list(
-                    {
-                        p.address
-                        for k, p in enumerate(self.problem.packages)
-                        if k in vehicle_packages
-                    }
-                )
+            vehicle_route = list(
+                {
+                    p.address
+                    for k, p in enumerate(self.problem.packages)
+                    if k in vehicle_packages
+                }
+            )
 
-                vehicle_route = np.random.permutation(vehicle_route)
+            vehicle_route = np.random.permutation(vehicle_route)
 
-                x_juv[j, problem.graph.warehouse, vehicle_route[0]] = 1
+            x_juv[j, problem.graph.warehouse, vehicle_route[0]] = 1
 
-                for u, v in zip(vehicle_route, vehicle_route[1:]):
-                    x_juv[j, u, v] = 1
+            for u, v in zip(vehicle_route, vehicle_route[1:]):
+                x_juv[j, u, v] = 1
 
-                x_juv[j, vehicle_route[-1], problem.graph.warehouse] = 1
+            x_juv[j, vehicle_route[-1], problem.graph.warehouse] = 1
 
         return Solution(problem, x_juv, y_kj, z_ij)
 

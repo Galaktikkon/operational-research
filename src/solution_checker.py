@@ -18,7 +18,7 @@ class SolutionChecker:
 
         for func, name in zip(funcs, func_names):
             if not func():
-                # print(f"error in {name}")
+                # print(f"\nerror in {name}")
                 return False
 
         self.solution = None
