@@ -11,11 +11,11 @@ class Solution:
         problem: Problem,
         x_juv: np.ndarray,
         y_k: np.ndarray,
-        z_ij: np.ndarray,
+        z_j: np.ndarray,
     ):
         self.problem = problem
         self.x_juv = x_juv
-        self.z_j = z_ij
+        self.z_j = z_j
         self.y_k = y_k
 
         self.t_i: np.ndarray | None = None
@@ -137,28 +137,28 @@ class Solution:
         offspring = Solution(
             self.problem,
             np.zeros_like(self.x_juv),
-            np.zeros_like(self.y_kj),
-            np.zeros_like(self.z_ij),
+            np.zeros_like(self.y_k),
+            np.zeros_like(self.z_j),
         )
 
-        z1 = self.z_ij
-        z2 = other.z_ij
+        z1 = self.z_j
+        z2 = other.z_j
 
         permissions = offspring.problem.permissions
 
-        for j in range(len(offspring.z_ij)):
+        for j in range(len(offspring.z_j)):
             selected_driver = random.choice([z1[j], z2[j], None])
 
             if selected_driver is not None and permissions[selected_driver, j]:
-                offspring.z_ij[j] = selected_driver
+                offspring.z_j[j] = selected_driver
             else:
                 valid_drivers = [
                     i for i in range(permissions.shape[0]) if permissions[i, j] == 1
                 ]
                 if valid_drivers:
-                    offspring.z_ij[j] = random.choice(valid_drivers)
+                    offspring.z_j[j] = random.choice(valid_drivers)
                 else:
-                    offspring.z_ij[j] = None
+                    offspring.z_j[j] = None
 
         return offspring
 
