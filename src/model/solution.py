@@ -1,5 +1,6 @@
 import numpy as np
 from .problem import Problem
+from random import sample
 
 
 class Solution:
@@ -12,7 +13,7 @@ class Solution:
     ):
         self.problem = problem
         self.x_juv = x_juv
-        self.z_ij = z_ij
+        self.z_j = z_ij
         self.y_k = y_k
 
         self.t_i: np.ndarray | None = None
@@ -22,7 +23,7 @@ class Solution:
     def __hash__(self):
         x_hashable = tuple(self.x_juv.flatten().tolist())
         y_hashable = tuple(self.y_k.tolist())
-        z_hashable = tuple(self.z_ij.flatten().tolist())
+        z_hashable = tuple(self.z_j.tolist())
 
         return hash((x_hashable, y_hashable, z_hashable))
 
@@ -33,13 +34,15 @@ class Solution:
         return (
             np.all(self.x_juv == value.x_juv)
             and np.all(self.y_k == value.y_k)
-            and np.all(self.z_ij == value.z_ij)
+            and np.all(self.z_j == value.z_j)
         )
 
     def __repr__(self):
         rows = []
 
-        for i, j in zip(*self.z_ij.nonzero()):
+        for j, i in enumerate(self.z_j):
+            if i == -1:
+                continue
             courier = self.problem.couriers[i]
             vehicle = self.problem.vehicles[j]
 
@@ -80,7 +83,8 @@ class Solution:
                     for v in range(n_nodes):
                         s += self.problem.s_uv[u, v] * self.x_juv[j, u, v]
 
-                self.t_i[i] += self.z_ij[i, j] * s
+                z_ij = 1 if self.z_j[j] == i else 0
+                self.t_i[i] += z_ij * s
 
     def calc_v_k(self):
         if self.v_k is not None:
@@ -114,3 +118,12 @@ class Solution:
         self.d_j = np.zeros(self.problem.n_vehicles)
         for j in range(self.problem.n_vehicles):
             self.d_j[j] = np.sum(self.x_juv[j] * self.problem.g_uv)
+
+    def swap_random_pair(self, list_):
+        indices = [i for i in range(len(list_))]
+        first, second = sample(indices, 2)
+        list_[first], list_[second] = list_[second], list_[first]
+
+    def __invert__(self):
+        self.swap_random_pair(self.z_j)
+        self.swap_random_pair(self.y_kj)

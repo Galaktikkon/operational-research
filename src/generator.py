@@ -15,7 +15,7 @@ class Generator:
         problem = self.problem
         x_juv = np.zeros((problem.n_vehicles, problem.n_nodes, problem.n_nodes))
         y_k = np.full(problem.n_packages, -1, dtype=int)
-        z_ij = np.zeros((problem.n_couriers, problem.n_vehicles))
+        z_j = np.full(problem.n_vehicles, -1, dtype=int)
 
         for k in range(self.problem.n_packages):
             y_k[k] = np.random.randint(self.problem.n_vehicles)
@@ -24,13 +24,13 @@ class Generator:
             i = np.random.randint(problem.n_couriers)
             tries = 0
             max_tries = 2 * problem.n_couriers
-            while (i, j) not in problem.permissions or z_ij[i].sum() >= 1:
+            while (i, j) not in problem.permissions or i in z_j:
                 i = np.random.randint(problem.n_couriers)
                 tries += 1
                 if tries == max_tries:
                     break
 
-            z_ij[i, j] = 1
+            z_j[j] = i
 
             vehicle_packages = np.where(y_k == j)[0]
 
@@ -51,7 +51,7 @@ class Generator:
 
             x_juv[j, vehicle_route[-1], problem.graph.warehouse] = 1
 
-        return Solution(problem, x_juv, y_k, z_ij)
+        return Solution(problem, x_juv, y_k, z_j)
 
     def generate_many_feasible(
         self,
