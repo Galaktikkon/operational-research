@@ -1,5 +1,6 @@
 import numpy as np
 from .problem import Problem
+from typing import NoReturn, Union
 from random import sample, choice
 
 
@@ -9,11 +10,11 @@ class Solution:
         problem: Problem,
         x_juv: np.ndarray,
         y_k: np.ndarray,
-        z_ij: np.ndarray,
+        z_j: np.ndarray,
     ):
         self.problem = problem
         self.x_juv = x_juv
-        self.z_j = z_ij
+        self.z_j = z_j
         self.y_k = y_k
 
         self.t_i: np.ndarray | None = None
@@ -118,6 +119,47 @@ class Solution:
         self.d_j = np.zeros(self.problem.n_vehicles)
         for j in range(self.problem.n_vehicles):
             self.d_j[j] = np.sum(self.x_juv[j] * self.problem.g_uv)
+
+    def __add__(self, other: "Solution") -> Union[NoReturn, "Solution"]:
+        """Crossing between two solutions.
+        Args:
+            other (Solution): other solution to cross with.
+        Returns:
+            Solution: offspring solution.
+        Raises:
+            TypeError: Crossing allowed only between two solutions.
+        """
+
+        if not isinstance(other, Solution):
+            raise TypeError("Crossing allowed only between two solutions.")
+
+        offspring = Solution(
+            self.problem,
+            np.zeros_like(self.x_juv),
+            np.zeros_like(self.y_k),
+            np.zeros_like(self.z_j),
+        )
+
+        z1 = self.z_j
+        z2 = other.z_j
+
+        permissions = offspring.problem.permissions
+
+        for j in range(len(offspring.z_j)):
+            selected_driver = choice([z1[j], z2[j], None])
+
+            if selected_driver is not None and permissions[selected_driver, j]:
+                offspring.z_j[j] = selected_driver
+            else:
+                valid_drivers = [
+                    i for i in range(permissions.shape[0]) if permissions[i, j] == 1
+                ]
+                if valid_drivers:
+                    offspring.z_j[j] = choice(valid_drivers)
+                else:
+                    offspring.z_j[j] = None
+
+        return offspring
 
     def swap_random_pair_1D(self, list_):
         indices = [i for i in range(len(list_))]
