@@ -30,7 +30,7 @@ class Problem:
         self.n_packages = len(packages)
         self.n_nodes = graph.n_nodes
 
-        self.calc_s_uv_g_uv()
+        self._calc_s_uv_g_uv()
 
     def __repr__(self):
         rows = (
@@ -49,7 +49,7 @@ class Problem:
         )
         return "\n".join(rows)
 
-    def calc_s_uv_g_uv(self):
+    def _calc_s_uv_g_uv(self):
         n_nodes = self.graph.n_nodes
 
         self.s_uv = np.zeros((n_nodes, n_nodes))

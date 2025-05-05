@@ -22,9 +22,10 @@ class Solution:
         self.z_j = z_j
         self.y_k = y_k
 
-        self.t_i: np.ndarray | None = None
-        self.v_k: np.ndarray | None = None
-        self.d_j: np.ndarray | None = None
+        self._t_i: np.ndarray | None = None
+        self._v_k: np.ndarray | None = None
+        self._d_j: np.ndarray | None = None
+        self._l_vj: np.ndarray | None = None
 
     def __hash__(self):
         x_hashable = tuple(self.x_jv.flatten().tolist())
@@ -67,49 +68,60 @@ class Solution:
 
         return "\n".join(rows)
 
-    def calc_t_i(self):
-        if self.t_i is not None:
-            return
+    def get_t_i(self):
+        if self._t_i is not None:
+            return self._t_i
 
-        self.calc_v_k()
         warehouse = self.problem.graph.warehouse
 
-        self.t_i = np.zeros(self.problem.n_couriers)
+        self._t_i = np.zeros(self.problem.n_couriers)
         for i in range(self.problem.n_couriers):
             j = np.where(self.z_j == i)[0]
             if j.size:
                 j = j[0]
-                self.t_i[i] = self.l_vj[warehouse, j]
+                self._t_i[i] = self.get_l_vj()[warehouse, j]
 
-    def calc_v_k(self):
-        if self.v_k is not None:
-            return
+        return self._t_i
+
+    def get_l_vj(self):
+        if self._l_vj is not None:
+            return self._l_vj
 
         n_nodes = self.problem.graph.n_nodes
 
-        self.l_vj = np.zeros((n_nodes, self.problem.n_vehicles))
+        self._l_vj = np.zeros((n_nodes, self.problem.n_vehicles))
         for j in range(self.problem.n_vehicles):
             for u, v in zip(self.x_jv[j], self.x_jv[j, 1:]):
-                self.l_vj[v, j] = self.l_vj[u, j] + self.problem.s_uv[u, v]
+                self._l_vj[v, j] = self._l_vj[u, j] + self.problem.s_uv[u, v]
                 if v == self.problem.graph.warehouse:
                     break
 
-        self.v_k = np.zeros(self.problem.n_packages)
+        return self._l_vj
+
+    def get_v_k(self):
+        if self._v_k is not None:
+            return self._v_k
+
+        self._v_k = np.zeros(self.problem.n_packages)
         for k, p in enumerate(self.problem.packages):
             for j in range(self.problem.n_vehicles):
                 if self.y_k[k] == j:
-                    self.v_k[k] += self.l_vj[p.address, j]
+                    self._v_k[k] += self.get_l_vj()[p.address, j]
 
-    def calc_d_j(self):
-        if self.d_j is not None:
-            return
+        return self._v_k
 
-        self.d_j = np.zeros(self.problem.n_vehicles)
+    def get_d_j(self):
+        if self._d_j is not None:
+            return self._d_j
+
+        self._d_j = np.zeros(self.problem.n_vehicles)
         for j in range(self.problem.n_vehicles):
             for u, v in zip(self.x_jv[j], self.x_jv[j, 1:]):
-                self.d_j[j] += self.problem.g_uv[u, v]
+                self._d_j[j] += self.problem.g_uv[u, v]
                 if v == self.problem.graph.warehouse:
                     break
+
+        return self._d_j
 
     # def __add__(self, other: "Solution") -> Union[NoReturn, "Solution"]:
     #     """Crossing between two solutions.

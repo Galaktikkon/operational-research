@@ -29,9 +29,8 @@ class SolutionChecker:
         return np.unique(self.solution.z_j[non_empty]).size == non_empty.sum()
 
     def __check_4(self):
-        self.solution.calc_t_i()
         b_i = np.array([c.work_limit for c in self.problem.couriers])
-        return np.all(self.solution.t_i <= b_i)
+        return np.all(self.solution.get_t_i() <= b_i)
 
     def __check_5(self):
         r_j = np.zeros_like(self.solution.z_j)
@@ -50,12 +49,10 @@ class SolutionChecker:
         return True
 
     def __check_7(self):
-        self.solution.calc_v_k()
-
         a = np.array([p.start_time for p in self.problem.packages])
         b = np.array([p.end_time for p in self.problem.packages])
 
-        return np.all((a <= self.solution.v_k) & (self.solution.v_k <= b))
+        return np.all((a <= self.solution.get_v_k()) & (self.solution.get_v_k() <= b))
 
     def __check_9(self):
         for j in range(self.problem.n_vehicles):
