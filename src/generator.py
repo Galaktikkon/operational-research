@@ -14,41 +14,57 @@ class Generator:
     def generate_solution(self) -> Optional[Solution]:
         problem = self.problem
         warehouse = self.problem.graph.warehouse
-        x_jv = np.full((problem.n_vehicles, problem.n_nodes), warehouse, dtype=int)
-        y_k = np.full(problem.n_packages, -1, dtype=int)
-        z_j = np.full(problem.n_vehicles, -1, dtype=int)
+        self.x_jv = np.full((problem.n_vehicles, problem.n_nodes), warehouse, dtype=int)
+        self.y_k = np.full(problem.n_packages, -1, dtype=int)
+        self.z_j = np.full(problem.n_vehicles, -1, dtype=int)
+
+        x_jv, y_k, z_j = self.x_jv, self.y_k, self.z_j
+
+        matched_vehicles = set()
 
         for k in range(problem.n_packages):
-            y_k[k] = np.random.randint(problem.n_vehicles)
+            if np.unique(z_j[z_j != -1]).size == problem.n_couriers:
+                y_k[k] = np.random.choice(list(matched_vehicles))
+            else:
+                y_k[k] = np.random.randint(problem.n_vehicles)
+
+            if y_k[k] not in matched_vehicles:
+                self._add_courier_to_vehicle(y_k[k])
+                matched_vehicles.add(y_k[k])
 
         for j in np.unique(y_k):
-            i = np.random.randint(problem.n_couriers)
-            tries = 0
-            max_tries = 2 * problem.n_couriers
-            while (i, j) not in problem.permissions or i in z_j:
-                i = np.random.randint(problem.n_couriers)
-                tries += 1
-                if tries == max_tries:
-                    break
-
-            z_j[j] = i
-
-            vehicle_packages = np.where(y_k == j)[0]
-
-            vehicle_route = np.unique(
-                [
-                    p.address
-                    for k, p in enumerate(problem.packages)
-                    if k in vehicle_packages
-                ]
-            )
-
-            vehicle_route = np.random.permutation(vehicle_route)
-
-            for v_i, v in enumerate(vehicle_route, start=1):
-                x_jv[j, v_i] = v
+            self._add_route_to_vehicle(j)
 
         return Solution(problem, x_jv, y_k, z_j)
+
+    def _add_courier_to_vehicle(self, j):
+        problem = self.problem
+        i = np.random.randint(problem.n_couriers)
+        tries = 0
+        max_tries = 2 * problem.n_couriers
+        while (i, j) not in problem.permissions or i in self.z_j:
+            i = np.random.randint(problem.n_couriers)
+            tries += 1
+            if tries == max_tries:
+                break
+
+        self.z_j[j] = i
+
+    def _add_route_to_vehicle(self, j):
+        vehicle_packages = np.where(self.y_k == j)[0]
+
+        vehicle_route = np.unique(
+            [
+                p.address
+                for k, p in enumerate(self.problem.packages)
+                if k in vehicle_packages
+            ]
+        )
+
+        vehicle_route = np.random.permutation(vehicle_route)
+
+        for v_i, v in enumerate(vehicle_route, start=1):
+            self.x_jv[j, v_i] = v
 
     def generate_many_feasible(
         self,

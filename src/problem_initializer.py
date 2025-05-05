@@ -14,8 +14,8 @@ class ProblemInitializer:
         )
 
     def __init__(self):
-        n_couriers = 50
-        n_vehicles = 50
+        n_couriers = 10
+        n_vehicles = 5
         n_packages = 50
 
         self.couriers = [self.random_courier() for _ in range(n_couriers)]
