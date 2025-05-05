@@ -59,7 +59,7 @@ class Solution:
             for k in np.where(self.y_k == j)[0]:
                 rows.append(str(self.problem.packages[k]))
 
-            route = self.get_route(True, True)
+            route = self.get_route(j, True, True)
 
             rows.append("  ->  ".join([f"{v:5}" for v in route]))
 

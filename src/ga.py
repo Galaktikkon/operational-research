@@ -3,6 +3,8 @@ from model.solution import Solution
 from model.problem import Problem
 from solution_checker import SolutionChecker
 import functools
+from copy import deepcopy
+from ui.draw_solution import draw_solution
 
 
 class GA:
@@ -52,24 +54,77 @@ class GA:
             if j2 is not None:
                 z_j[j2] = i1
 
-            # s = Solution(self.problem, x_jv, y_k, z_j)
-            # if not self.checker.is_feasible(s):
-            #     if j1 is not None:
-            #         z_j[j1] = i1
-            #     if j2 is not None:
-            #         z_j[j2] = i2
+            s = Solution(self.problem, x_jv, y_k, z_j)
+            if self.checker.is_feasible(s):
+                return s
+            else:
+                return solution
+                if j1 is not None:
+                    z_j[j1] = i1
+                if j2 is not None:
+                    z_j[j2] = i2
 
         # przeniesienie paczki
-        if np.random.rand() < 0.5:
-            ...
-        # zamiana aut
-        if np.random.rand() < 0.5:
-            ...
+        if np.random.rand() < 0.5 and self.problem.n_packages >= 2:
+            k = np.random.randint(self.problem.n_packages)
+            for _ in range(100):
+                j = np.random.randint(self.problem.n_vehicles)
+                if j in y_k and y_k[k] != j:
+                    old_val = y_k[k]
+                    y_k[k] = j
+                    break
+
+            s = Solution(self.problem, x_jv, y_k, z_j)
+            if self.checker.is_feasible(s):
+                return s
+            else:
+                return solution
+                y_k[k] = old_val
+
+        used_vehicles = np.unique(y_k)
+
+        # zamiana wykorzystanych aut
+        if np.random.rand() < 0.5 and used_vehicles.size >= 2:
+            a = np.random.choice(used_vehicles)
+            b = np.random.choice(used_vehicles)
+            while a == b:
+                b = np.random.choice(used_vehicles)
+
+            y_k[y_k == a], y_k[y_k == b] = b, a
+            s = Solution(self.problem, x_jv, y_k, z_j)
+            if self.checker.is_feasible(s):
+                return s
+            else:
+                return solution
+                y_k[y_k == a], y_k[y_k == b] = b, a
+
+        # zamiana z niewykorzystanym autem
+        if np.random.rand() < 0.5 and used_vehicles.size != self.problem.n_vehicles:
+            unused_vehicles = np.setdiff1d(
+                np.arange(self.problem.n_vehicles), used_vehicles
+            )
+
+            a = np.random.choice(used_vehicles)
+            b = np.random.choice(unused_vehicles)
+
+            old_val = z_j[b]
+            z_j[b] = z_j[a]
+            z_j[a] = -1
+
+            y_k[y_k == a] = b
+            s = Solution(self.problem, x_jv, y_k, z_j)
+            if self.checker.is_feasible(s):
+                return s
+            else:
+                return solution
+                z_j[a] = z_j[b]
+                z_j[b] = old_val
+                y_k[y_k == b] = a
 
         # zmiana trasy
-        for j in range(self.problem.n_vehicles):
+        for j in np.unique(y_k):
             route = solution.get_route(j)
-            if route.size > 1 and np.random.rand() < 0.5:
+            if route.size > 1 and np.random.rand() < 0.9:
                 a = np.random.randint(route.size) + 1
                 b = np.random.randint(route.size) + 1
                 while a == b:
@@ -77,29 +132,36 @@ class GA:
 
                 x_jv[j, a], x_jv[j, b] = x_jv[j, b], x_jv[j, a]
 
-                # s = Solution(self.problem, x_jv, y_k, z_j)
-                # if not self.checker.is_feasible(s):
-                #     x_jv[j, a], x_jv[j, b] = x_jv[j, b], x_jv[j, a]
+                s = Solution(self.problem, x_jv, y_k, z_j)
 
-        s = Solution(self.problem, x_jv, y_k, z_j)
-        if not self.checker.is_feasible(s):
-            return solution
+                s = Solution(self.problem, x_jv, y_k, z_j)
+                if self.checker.is_feasible(s):
+                    # print("udana zamiana")
+                    # draw_solution(s)
+                    return s
+                else:
+                    return solution
+                    x_jv[j, a], x_jv[j, b] = x_jv[j, b], x_jv[j, a]
 
-        return s
+        return solution
 
     def run(self):
         solutions = self.initial_population
         solutions.sort(key=lambda s: self.get_score(s))
-        best = self.get_score(solutions[0])
+        best = deepcopy(solutions[0])
 
-        for i in range(1000):
-            ok = solutions  # [:30]
-            bad = solutions  # [30:60]
-
+        for i in range(10000):
             solutions = solutions + [self.mutation(s) for s in solutions]
             solutions.sort(key=lambda s: self.get_score(s))
+            solutions = solutions[:8]
+            # print(self.get_score(solutions[0]))
+            # ok = solutions[: len(solutions) // 2]
+            # # # bad = solutions[10:]
+
+            # solutions = ok + [self.mutation(s) for s in ok]
+            # # solutions.sort(key=lambda s: self.get_score(s))
             if i % 100 == 0:
                 print(i)
 
-        print(best, self.get_score(solutions[0]))
-        return solutions[0]
+        print(self.get_score(best), self.get_score(solutions[0]))
+        return best, solutions[0]

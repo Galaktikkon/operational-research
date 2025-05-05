@@ -7,15 +7,24 @@ from operator import itemgetter
 
 
 def main():
-    problem = ProblemInitializer().get_problem()
+    n_couriers = 2
+    n_vehicles = 10
+    n_packages = 10
+
+    problem = ProblemInitializer(n_couriers, n_vehicles, n_packages).get_problem()
     print(problem)
 
     generator = Generator(problem)
-    solutions = generator.generate_many_feasible(num_to_find=10)
+    solutions = generator.generate_many_feasible(num_to_find=8)
 
     ga = GA(problem, solutions)
 
-    solutions.sort(key=lambda s: ga.get_score(s))
-    draw_solution(solutions[0])
+    a, b = ga.run()
+    print()
+    print(f"BEFORE {ga.get_score(a)}")
+    print(a)
+    print(f"AFTER {ga.get_score(b)}")
+    print(b)
 
-    draw_solution(ga.run())
+    draw_solution(a)
+    draw_solution(b)

@@ -13,11 +13,7 @@ class ProblemInitializer:
             self.graph,
         )
 
-    def __init__(self):
-        n_couriers = 3
-        n_vehicles = 3
-        n_packages = 10
-
+    def __init__(self, n_couriers, n_vehicles, n_packages):
         self.couriers = [self.random_courier() for _ in range(n_couriers)]
 
         self.vehicles = [self.random_vehicle() for _ in range(n_vehicles)]

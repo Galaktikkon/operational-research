@@ -56,11 +56,7 @@ class Generator:
         vehicle_packages = np.where(self.y_k == j)[0]
 
         vehicle_route = np.unique(
-            [
-                p.address
-                for k, p in enumerate(self.problem.packages)
-                if k in vehicle_packages
-            ]
+            [self.problem.packages[k].address for k in vehicle_packages]
         )
 
         vehicle_route = np.random.permutation(vehicle_route)
