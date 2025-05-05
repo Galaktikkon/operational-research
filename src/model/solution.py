@@ -26,6 +26,7 @@ class Solution:
         self._v_k: np.ndarray | None = None
         self._d_j: np.ndarray | None = None
         self._l_vj: np.ndarray | None = None
+        self._m_jv: np.ndarray | None = None
 
     def __hash__(self):
         x_hashable = tuple(self.x_jv.flatten().tolist())
@@ -62,7 +63,16 @@ class Solution:
             route = trim_trailing(route, self.problem.graph.warehouse)
             route = route + [self.problem.graph.warehouse]
 
-            rows.append(" -> ".join([str(v) for v in route]))
+            rows.append("  ->  ".join([f"{v:5}" for v in route]))
+
+            time = [0] + [self.get_l_vj()[v, j] for v in route[1:]]
+            capacity = [self.get_m_jv()[j, v] for v in route[:-1]] + [0]
+
+            time = [f"{t:5.2f}" for t in time]
+            capacity = [f"{c:5.2f}" for c in capacity]
+
+            rows.append("      ".join(time) + " [s]")
+            rows.append("      ".join(capacity) + " [kg]")
 
             rows.append("")
 
@@ -122,6 +132,41 @@ class Solution:
                     break
 
         return self._d_j
+
+    def get_m_jv(self):
+        if self._m_jv is not None:
+            return self._m_jv
+
+        self._m_jv = np.zeros((self.problem.n_vehicles, self.problem.graph.n_nodes))
+        for j in range(self.problem.n_vehicles):
+            s = 0
+            for k, p in enumerate(self.problem.packages):
+                if p.type == "delivery" and self.y_k[k] == j:
+                    s += p.weight
+
+            self._m_jv[j, self.problem.graph.warehouse] = s
+
+            for v, next_v in zip(self.x_jv[j], self.x_jv[j, 1:]):
+                if next_v == self.problem.graph.warehouse:
+                    break
+
+                delivery = 0
+                for k, p in enumerate(self.problem.packages):
+                    if (
+                        p.type == "delivery"
+                        and p.address == next_v
+                        and self.y_k[k] == j
+                    ):
+                        delivery += p.weight
+
+                pickup = 0
+                for k, p in enumerate(self.problem.packages):
+                    if p.type == "pickup" and p.address == next_v and self.y_k[k] == j:
+                        pickup += p.weight
+
+                self._m_jv[j, next_v] = self._m_jv[j, v] - delivery + pickup
+
+        return self._m_jv
 
     # def __add__(self, other: "Solution") -> Union[NoReturn, "Solution"]:
     #     """Crossing between two solutions.

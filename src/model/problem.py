@@ -43,7 +43,7 @@ class Problem:
             + [f"{j}: {str(v)}" for j, v in enumerate(self.vehicles)]
             + ["\nPackages"]
             + [f"{k}: {str(p)}" for k, p in enumerate(self.packages)]
-            + ["\nGraph"]
+            + ["\nGraph (dist, time)"]
             + [str(self.graph)]
             + [""]
         )
@@ -56,5 +56,5 @@ class Problem:
         self.g_uv = np.zeros((n_nodes, n_nodes))
 
         for u, v, dist, time in self.graph.routes:
-            self.s_uv[u, v] = dist
-            self.g_uv[u, v] = time
+            self.s_uv[u, v] = time
+            self.g_uv[u, v] = dist

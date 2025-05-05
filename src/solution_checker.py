@@ -69,42 +69,7 @@ class SolutionChecker:
 
     def __check_11(self):
         for j, veh in enumerate(self.problem.vehicles):
-            l_v = np.zeros((self.problem.graph.n_nodes))
-            s = 0
-            for k, p in enumerate(self.problem.packages):
-                if p.type == "delivery" and self.solution.y_k[k] == j:
-                    s += p.weight
-
-            if s > veh.capacity:
-                return False
-
-            l_v[self.problem.graph.warehouse] = s
-
-            for v, next_v in zip(self.solution.x_jv[j], self.solution.x_jv[j, 1:]):
-                if next_v == self.problem.graph.warehouse:
-                    break
-
-                delivery = 0
-                for k, p in enumerate(self.problem.packages):
-                    if (
-                        p.type == "delivery"
-                        and p.address == next_v
-                        and self.solution.y_k[k] == j
-                    ):
-                        delivery += p.weight
-
-                pickup = 0
-                for k, p in enumerate(self.problem.packages):
-                    if (
-                        p.type == "pickup"
-                        and p.address == next_v
-                        and self.solution.y_k[k] == j
-                    ):
-                        pickup += p.weight
-
-                l_v[next_v] = l_v[v] - delivery + pickup
-
-                if l_v[next_v] > veh.capacity:
+            for v in range(self.problem.n_nodes):
+                if self.solution.get_m_jv()[j, v] > veh.capacity:
                     return False
-
         return True
