@@ -44,8 +44,7 @@ class SolutionChecker:
     def __check_6(self):
         for k, p in enumerate(self.problem.packages):
             j = self.solution.y_k[k]
-            s = self.solution.x_juv[j, :, p.address].sum()
-            if s == 0:
+            if p.address not in self.solution.x_jv[j]:
                 return False
 
         return True
@@ -58,46 +57,16 @@ class SolutionChecker:
 
         return np.all((a <= self.solution.v_k) & (self.solution.v_k <= b))
 
-    def __check_8(self):
-        for j in range(self.problem.n_vehicles):
-            s = 0
-
-            for v in range(self.problem.graph.n_nodes):
-                if v != self.problem.graph.warehouse:
-                    s += self.solution.x_juv[j, self.problem.graph.warehouse, v]
-
-            if s > 1:
-                return False
-
-        return True
-
     def __check_9(self):
         for j in range(self.problem.n_vehicles):
-            s1 = 0
-            s2 = 0
+            route = self.solution.x_jv[j]
+            last = self.problem.n_nodes - 1
 
-            for v in range(self.problem.graph.n_nodes):
-                if v != self.problem.graph.warehouse:
-                    s1 += self.solution.x_juv[j, self.problem.graph.warehouse, v]
-                    s2 += self.solution.x_juv[j, v, self.problem.graph.warehouse]
-
-            if s1 != s2 or s1 > 1:
-                return False
-
-        return True
-
-    def __check_10(self):
-        for j in range(self.problem.n_vehicles):
-            for v in range(self.problem.graph.n_nodes):
-                if v != self.problem.graph.warehouse:
-                    s1 = 0
-                    s2 = 0
-                    for u in range(self.problem.graph.n_nodes):
-                        s1 += self.solution.x_juv[j, u, v]
-                        s2 += self.solution.x_juv[j, v, u]
-
-                    if s1 != s2 or s1 > 1:
-                        return False
+            non_zero = np.where(route != 0)[0]
+            if len(non_zero) >= 1:
+                diffs = np.diff(non_zero)
+                if not np.all(diffs == 1) or non_zero[0] != 1 or non_zero[-1] == last:
+                    return False
 
         return True
 
@@ -114,11 +83,7 @@ class SolutionChecker:
 
             l_v[self.problem.graph.warehouse] = s
 
-            v = self.problem.graph.warehouse
-
-            while True:
-                next_v = self.solution.x_juv[j, v].argmax()
-
+            for v, next_v in zip(self.solution.x_jv[j], self.solution.x_jv[j, 1:]):
                 if next_v == self.problem.graph.warehouse:
                     break
 
@@ -144,7 +109,5 @@ class SolutionChecker:
 
                 if l_v[next_v] > veh.capacity:
                     return False
-
-                v = next_v
 
         return True

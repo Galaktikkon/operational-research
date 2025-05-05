@@ -12,9 +12,7 @@ def draw_solution(solution: Solution):
     plt.scatter(points[0][w], points[1][w], s=65, c="red")
 
     for j in range(solution.problem.n_vehicles):
-        u, v = solution.x_juv[j].nonzero()
-
-        for u, v in zip(u, v):
+        for u, v in zip(solution.x_jv[j], solution.x_jv[j, 1:]):
             plt.arrow(
                 *points[:, u],
                 *(points[:, v] - points[:, u]),
@@ -22,4 +20,6 @@ def draw_solution(solution: Solution):
                 head_width=0.6,
                 length_includes_head=True,
             )
+            if v == solution.problem.graph.warehouse:
+                break
     plt.show()

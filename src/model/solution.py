@@ -2,18 +2,23 @@ import numpy as np
 from .problem import Problem
 from typing import NoReturn, Union
 from random import sample, choice
+from itertools import dropwhile
+
+
+def trim_trailing(lst, val):
+    return list(reversed(list(dropwhile(lambda x: x == val, reversed(lst)))))
 
 
 class Solution:
     def __init__(
         self,
         problem: Problem,
-        x_juv: np.ndarray,
+        x_jv: np.ndarray,
         y_k: np.ndarray,
         z_j: np.ndarray,
     ):
         self.problem = problem
-        self.x_juv = x_juv
+        self.x_jv = x_jv
         self.z_j = z_j
         self.y_k = y_k
 
@@ -22,7 +27,7 @@ class Solution:
         self.d_j: np.ndarray | None = None
 
     def __hash__(self):
-        x_hashable = tuple(self.x_juv.flatten().tolist())
+        x_hashable = tuple(self.x_jv.flatten().tolist())
         y_hashable = tuple(self.y_k.tolist())
         z_hashable = tuple(self.z_j.tolist())
 
@@ -33,7 +38,7 @@ class Solution:
             return False
 
         return (
-            np.all(self.x_juv == value.x_juv)
+            np.all(self.x_jv == value.x_jv)
             and np.all(self.y_k == value.y_k)
             and np.all(self.z_j == value.z_j)
         )
@@ -52,19 +57,11 @@ class Solution:
             for k in np.where(self.y_k == j)[0]:
                 rows.append(str(self.problem.packages[k]))
 
-            route = [self.problem.graph.warehouse]
+            route = self.x_jv[j].tolist()
+            route = trim_trailing(route, self.problem.graph.warehouse)
+            route = route + [self.problem.graph.warehouse]
 
-            while True:
-                v = route[-1]
-                next_v = self.x_juv[j, v].argmax()
-                if next_v == self.problem.graph.warehouse:
-                    break
-                v = next_v
-                route.append(v)
-
-            rows.append(
-                " -> ".join([str(v) for v in route + [self.problem.graph.warehouse]])
-            )
+            rows.append(" -> ".join([str(v) for v in route]))
 
             rows.append("")
 
@@ -74,18 +71,15 @@ class Solution:
         if self.t_i is not None:
             return
 
-        n_nodes = self.problem.graph.n_nodes
+        self.calc_v_k()
+        warehouse = self.problem.graph.warehouse
 
         self.t_i = np.zeros(self.problem.n_couriers)
         for i in range(self.problem.n_couriers):
-            for j in range(self.problem.n_vehicles):
-                s = 0
-                for u in range(n_nodes):
-                    for v in range(n_nodes):
-                        s += self.problem.s_uv[u, v] * self.x_juv[j, u, v]
-
-                if self.z_j[j] == i:
-                    self.t_i[i] += s
+            j = np.where(self.z_j == i)[0]
+            if j.size:
+                j = j[0]
+                self.t_i[i] = self.l_vj[warehouse, j]
 
     def calc_v_k(self):
         if self.v_k is not None:
@@ -95,16 +89,10 @@ class Solution:
 
         self.l_vj = np.zeros((n_nodes, self.problem.n_vehicles))
         for j in range(self.problem.n_vehicles):
-            v = self.problem.graph.warehouse
-
-            while True:
-                next_v = self.x_juv[j, v].argmax()
-
-                if next_v == self.problem.graph.warehouse:
+            for u, v in zip(self.x_jv[j], self.x_jv[j, 1:]):
+                self.l_vj[v, j] = self.l_vj[u, j] + self.problem.s_uv[u, v]
+                if v == self.problem.graph.warehouse:
                     break
-
-                self.l_vj[next_v, j] = self.l_vj[v, j] + self.problem.s_uv[v, next_v]
-                v = next_v
 
         self.v_k = np.zeros(self.problem.n_packages)
         for k, p in enumerate(self.problem.packages):
@@ -118,68 +106,71 @@ class Solution:
 
         self.d_j = np.zeros(self.problem.n_vehicles)
         for j in range(self.problem.n_vehicles):
-            self.d_j[j] = np.sum(self.x_juv[j] * self.problem.g_uv)
+            for u, v in zip(self.x_jv[j], self.x_jv[j, 1:]):
+                self.d_j[j] += self.problem.g_uv[u, v]
+                if v == self.problem.graph.warehouse:
+                    break
 
-    def __add__(self, other: "Solution") -> Union[NoReturn, "Solution"]:
-        """Crossing between two solutions.
-        Args:
-            other (Solution): other solution to cross with.
-        Returns:
-            Solution: offspring solution.
-        Raises:
-            TypeError: Crossing allowed only between two solutions.
-        """
+    # def __add__(self, other: "Solution") -> Union[NoReturn, "Solution"]:
+    #     """Crossing between two solutions.
+    #     Args:
+    #         other (Solution): other solution to cross with.
+    #     Returns:
+    #         Solution: offspring solution.
+    #     Raises:
+    #         TypeError: Crossing allowed only between two solutions.
+    #     """
 
-        if not isinstance(other, Solution):
-            raise TypeError("Crossing allowed only between two solutions.")
+    #     if not isinstance(other, Solution):
+    #         raise TypeError("Crossing allowed only between two solutions.")
 
-        offspring = Solution(
-            self.problem,
-            np.zeros_like(self.x_juv),
-            np.zeros_like(self.y_k),
-            np.zeros_like(self.z_j),
-        )
+    #     offspring = Solution(
+    #         self.problem,
+    #         np.zeros_like(self.x_jvuv),
+    #         np.zeros_like(self.y_k),
+    #         np.zeros_like(self.z_j),
+    #     )
 
-        z1 = self.z_j
-        z2 = other.z_j
+    #     z1 = self.z_j
+    #     z2 = other.z_j
 
-        permissions = offspring.problem.permissions
+    #     permissions = offspring.problem.permissions
 
-        for j in range(len(offspring.z_j)):
-            selected_driver = choice([z1[j], z2[j], None])
+    #     for j in range(len(offspring.z_j)):
+    #         selected_driver = choice([z1[j], z2[j], None])
 
-            if selected_driver is not None and permissions[selected_driver, j]:
-                offspring.z_j[j] = selected_driver
-            else:
-                valid_drivers = [
-                    i for i in range(permissions.shape[0]) if permissions[i, j] == 1
-                ]
-                if valid_drivers:
-                    offspring.z_j[j] = choice(valid_drivers)
-                else:
-                    offspring.z_j[j] = None
+    #         if selected_driver is not None and permissions[selected_driver, j]:
+    #             offspring.z_j[j] = selected_driver
+    #         else:
+    #             valid_drivers = [
+    #                 i for i in range(permissions.shape[0]) if permissions[i, j] == 1
+    #             ]
+    #             if valid_drivers:
+    #                 offspring.z_j[j] = choice(valid_drivers)
+    #             else:
+    #                 offspring.z_j[j] = None
 
-        return offspring
+    #     return offspring
 
-    def swap_random_pair_1D(self, list_):
-        indices = [i for i in range(len(list_))]
-        if len(indices) <= 2:
-            return
-        first, second = sample(indices, 2)
-        list_[first], list_[second] = list_[second], list_[first]
+    # def swap_random_pair_1D(self, list_):
+    #     indices = [i for i in range(len(list_))]
+    #     if len(indices) <= 2:
+    #         return
+    #     first, second = sample(indices, 2)
+    #     list_[first], list_[second] = list_[second], list_[first]
 
-    def swap_random_pair_2D(self, matrix):
-        non_zeros = np.argwhere(matrix != 0)
-        zeros = np.argwhere(matrix == 0)
-        if not (non_zeros and zeros):
-            return
-        zero = choice(zeros)
-        non_zero = choice(non_zeros)
-        i1, j1 = zero
-        i2, j2 = non_zero
-        matrix[i1, j1], matrix[i2, j2] = matrix[i2, j2], matrix[i1, j1]
+    # def swap_random_pair_2D(self, matrix):
+    #     non_zeros = np.argwhere(matrix != 0)
+    #     zeros = np.argwhere(matrix == 0)
+    #     if not (non_zeros and zeros):
+    #         return
+    #     zero = choice(zeros)
+    #     non_zero = choice(non_zeros)
+    #     i1, j1 = zero
+    #     i2, j2 = non_zero
+    #     matrix[i1, j1], matrix[i2, j2] = matrix[i2, j2], matrix[i1, j1]
 
-    def __invert__(self):
-        self.swap_random_pair_1D(self.z_j)
-        self.swap_random_pair_1D(self.y_k)
-        self.swap_random_pair_2D(self.x_juv)
+    # def __invert__(self):
+    #     self.swap_random_pair_1D(self.z_j)
+    #     self.swap_random_pair_1D(self.y_k)
+    #     self.swap_random_pair_2D(self.x_jvuv)
