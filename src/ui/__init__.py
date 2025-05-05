@@ -1,1 +1,1 @@
-from .draw_solution import *
+from .ui import *

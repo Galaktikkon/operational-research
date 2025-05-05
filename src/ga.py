@@ -1,10 +1,11 @@
+from utils import *
 import numpy as np
 from model.solution import Solution
 from model.problem import Problem
 from solution_checker import SolutionChecker
 import functools
 from copy import deepcopy
-from ui.draw_solution import draw_solution
+from ui import draw_solution
 
 
 class GA:
@@ -28,7 +29,52 @@ class GA:
 
         return rates + fuel_cost + delay
 
-    def crossover(self, s1: Solution, s2: Solution): ...
+    def crossover(self, s1: Solution, s2: Solution):
+        problem = self.problem
+        warehouse = problem.graph.warehouse
+        z_j1 = s1.z_j.copy()
+        x_jv1 = s1.x_jv.copy()
+        y_k1 = s1.y_k.copy()
+
+        z_j2 = s2.z_j.copy()
+        x_jv2 = s2.x_jv.copy()
+        y_k2 = s2.y_k.copy()
+
+        used_vehicles = np.unique(np.append(y_k1, y_k2))
+        unused_vehicles = np.setdiff1d(
+            np.arange(self.problem.n_vehicles), used_vehicles
+        )
+        vehicles = used_vehicles if used_vehicles.size else unused_vehicles
+
+        used_couriers = np.unique(np.append(z_j1, z_j2))
+        unused_couriers = np.setdiff1d(
+            np.arange(self.problem.n_couriers), used_couriers
+        )
+
+        x_jv = np.full((problem.n_vehicles, problem.n_nodes + 1), warehouse, dtype=int)
+        y_k = np.full(problem.n_packages, -1, dtype=int)
+        z_j = np.full(problem.n_vehicles, -1, dtype=int)
+
+        for k in range(self.problem.n_packages):
+            y_k[k] = np.random.choice(vehicles)
+
+        for j in np.unique(y_k):
+            for _ in range(100):
+                i = np.random.choice(used_couriers)
+                if i not in z_j:
+                    z_j[j] = i
+                    break
+            else:
+                i = np.random.choice(unused_couriers)
+                while i in z_j:
+                    i = np.random.choice(unused_couriers)
+                z_j[j] = i
+
+            x_jv[j] = calculate_vehicle_route(problem, y_k, j)
+
+        s = Solution(problem, x_jv, y_k, z_j)
+
+        return s if self.checker.is_feasible(s) else None
 
     def mutation(self, solution: Solution):
         z_j = solution.z_j.copy()

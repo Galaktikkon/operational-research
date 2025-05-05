@@ -9,7 +9,7 @@ from operator import itemgetter
 def main():
     n_couriers = 1
     n_vehicles = 1
-    n_packages = 10
+    n_packages = 5
 
     problem = ProblemInitializer(n_couriers, n_vehicles, n_packages).get_problem()
     print(problem)

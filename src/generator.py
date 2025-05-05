@@ -4,6 +4,7 @@ from solution_checker import SolutionChecker
 from model.problem import Problem
 from model.solution import Solution
 import numpy as np
+from utils import *
 
 
 class Generator:
@@ -53,16 +54,7 @@ class Generator:
         self.z_j[j] = i
 
     def _add_route_to_vehicle(self, j):
-        vehicle_packages = np.where(self.y_k == j)[0]
-
-        vehicle_route = np.unique(
-            [self.problem.packages[k].address for k in vehicle_packages]
-        )
-
-        vehicle_route = np.random.permutation(vehicle_route)
-
-        for v_i, v in enumerate(vehicle_route, start=1):
-            self.x_jv[j, v_i] = v
+        self.x_jv[j] = calculate_vehicle_route(self.problem, self.y_k, j)
 
     def generate_many_feasible(
         self,
