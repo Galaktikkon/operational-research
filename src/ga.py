@@ -31,7 +31,7 @@ class GA:
 
     def crossover(self, s1: Solution, s2: Solution):
         for _ in range(100):
-            s = self._crossover(s1, s1)
+            s = self._crossover(s1, s2)
             if s is not None:
                 return s
         return None
