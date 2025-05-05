@@ -14,15 +14,15 @@ class ProblemInitializer:
         )
 
     def __init__(self):
-        n_couriers = 10
-        n_vehicles = 5
-        n_packages = 50
+        n_couriers = 3
+        n_vehicles = 3
+        n_packages = 10
 
         self.couriers = [self.random_courier() for _ in range(n_couriers)]
 
         self.vehicles = [self.random_vehicle() for _ in range(n_vehicles)]
 
-        self.permissions = self.random_permissions(0.7)
+        self.permissions = self.random_permissions(1)
 
         max_address = n_packages
         self.packages = [self.random_package(max_address) for _ in range(n_packages)]
@@ -50,13 +50,11 @@ class ProblemInitializer:
             (i, j)
             for i in range(n)
             for j in range(m)
-            if np.random.rand() < permission_proba
+            if np.random.rand() <= permission_proba
         ]
 
-    def random_package(self, max_address, warehouse=0):
+    def random_package(self, max_address):
         address = np.random.randint(max_address)
-        while address == warehouse:
-            address = np.random.randint(max_address)
 
         weight = np.round(np.random.rand() * 10, 2)
         start_time = 0  # np.random.randint(1, 2) * 60

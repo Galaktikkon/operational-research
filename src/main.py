@@ -11,18 +11,11 @@ def main():
     print(problem)
 
     generator = Generator(problem)
-    solutions = generator.generate_many_feasible()
+    solutions = generator.generate_many_feasible(num_to_find=10)
 
-    initial_population = solutions
+    ga = GA(problem, solutions)
 
-    ga = GA(problem, initial_population)
+    solutions.sort(key=lambda s: ga.get_score(s))
+    draw_solution(solutions[0])
 
-    solutions = [(s, ga.get_score(s)) for s in solutions]
-    solutions.sort(key=itemgetter(1))
-
-    # if len(solutions):
-    #     draw_solution(solutions[0][0])
-
-    for idx, (solution, score) in enumerate(solutions, start=1):
-        print(f"\n--- Solution {idx} --- {score:.2f}")
-        print(solution)
+    draw_solution(ga.run())

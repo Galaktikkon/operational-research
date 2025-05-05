@@ -57,7 +57,7 @@ class SolutionChecker:
     def __check_9(self):
         for j in range(self.problem.n_vehicles):
             route = self.solution.x_jv[j]
-            last = self.problem.n_nodes - 1
+            last = self.problem.n_nodes
 
             non_zero = np.where(route != 0)[0]
             if len(non_zero) >= 1:

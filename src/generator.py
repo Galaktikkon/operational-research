@@ -14,7 +14,9 @@ class Generator:
     def generate_solution(self) -> Optional[Solution]:
         problem = self.problem
         warehouse = self.problem.graph.warehouse
-        self.x_jv = np.full((problem.n_vehicles, problem.n_nodes), warehouse, dtype=int)
+        self.x_jv = np.full(
+            (problem.n_vehicles, problem.n_nodes + 1), warehouse, dtype=int
+        )
         self.y_k = np.full(problem.n_packages, -1, dtype=int)
         self.z_j = np.full(problem.n_vehicles, -1, dtype=int)
 

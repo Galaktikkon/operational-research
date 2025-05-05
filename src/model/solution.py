@@ -59,9 +59,7 @@ class Solution:
             for k in np.where(self.y_k == j)[0]:
                 rows.append(str(self.problem.packages[k]))
 
-            route = self.x_jv[j].tolist()
-            route = trim_trailing(route, self.problem.graph.warehouse)
-            route = route + [self.problem.graph.warehouse]
+            route = self.get_route(True, True)
 
             rows.append("  ->  ".join([f"{v:5}" for v in route]))
 
@@ -77,6 +75,18 @@ class Solution:
             rows.append("")
 
         return "\n".join(rows)
+
+    def get_route(self, j, leading_warehouse=False, trailing_warehouse=False):
+        warehouse = self.problem.graph.warehouse
+        route = self.x_jv[j][self.x_jv[j] != warehouse]
+
+        if leading_warehouse:
+            route = np.insert(route, 0, warehouse)
+
+        if trailing_warehouse:
+            route = np.append(route, warehouse)
+
+        return route
 
     def get_t_i(self):
         if self._t_i is not None:
