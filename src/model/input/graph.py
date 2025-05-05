@@ -34,8 +34,12 @@ class Graph:
         self.points = points
 
     def __repr__(self):
-        df = pd.DataFrame(self.routes, columns=["a", "b", "dist", "time"])
+        dist = [(t[0], t[1], t[2]) for t in self.routes]
+        df = pd.DataFrame(dist, columns=["a", "b", "dist"])
+        result1 = df.set_index(["a", "b"]).apply(tuple, axis=1).unstack()
 
-        result = df.set_index(["a", "b"]).apply(tuple, axis=1).unstack()
+        time = [(t[0], t[1], t[3]) for t in self.routes]
+        df = pd.DataFrame(time, columns=["a", "b", "time"])
+        result2 = df.set_index(["a", "b"]).apply(tuple, axis=1).unstack()
 
-        return str(result)
+        return "dist\n" + str(result1) + "\ntime\n" + str(result2)

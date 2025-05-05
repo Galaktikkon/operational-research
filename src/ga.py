@@ -11,20 +11,19 @@ class GA:
     def __init__(self, problem: Problem, initial_population: list[Solution]):
         self.problem = problem
         self.checker = SolutionChecker(problem)
-        self.C = 6
-        self.alpha = 0.1
+        self.C = 1
+        self.alpha = 0
         self.initial_population = initial_population
 
     @functools.cache
     def get_score(self, solution: Solution):
-        c_i = np.array([c.hourly_rate for c in self.problem.couriers])
+        c_i = np.array([c.hourly_rate / 60 for c in self.problem.couriers])
         p_j = np.array([v.fuel_consumption for v in self.problem.vehicles])
 
         a_k = np.array([p.start_time for p in self.problem.packages])
 
         rates = solution.get_t_i() @ c_i
         fuel_cost = self.C * (p_j @ solution.get_d_j())
-
         delay = self.alpha / self.problem.n_packages * np.sum(solution.get_v_k() - a_k)
 
         return rates + fuel_cost + delay
@@ -124,7 +123,7 @@ class GA:
         # zmiana trasy
         for j in np.unique(y_k):
             route = solution.get_route(j)
-            if route.size > 1 and np.random.rand() < 0.9:
+            if route.size > 1 and np.random.rand() < 1:
                 a = np.random.randint(route.size) + 1
                 b = np.random.randint(route.size) + 1
                 while a == b:
@@ -133,15 +132,12 @@ class GA:
                 x_jv[j, a], x_jv[j, b] = x_jv[j, b], x_jv[j, a]
 
                 s = Solution(self.problem, x_jv, y_k, z_j)
-
-                s = Solution(self.problem, x_jv, y_k, z_j)
                 if self.checker.is_feasible(s):
-                    # print("udana zamiana")
-                    # draw_solution(s)
+                    # print(s.get_route(j), self.get_score(s), a, b, route.size)
                     return s
-                else:
-                    return solution
-                    x_jv[j, a], x_jv[j, b] = x_jv[j, b], x_jv[j, a]
+                # else:
+                #     return solution
+                #     x_jv[j, a], x_jv[j, b] = x_jv[j, b], x_jv[j, a]
 
         return solution
 
@@ -150,10 +146,10 @@ class GA:
         solutions.sort(key=lambda s: self.get_score(s))
         best = deepcopy(solutions[0])
 
-        for i in range(10000):
+        for i in range(100):
             solutions = solutions + [self.mutation(s) for s in solutions]
             solutions.sort(key=lambda s: self.get_score(s))
-            solutions = solutions[:8]
+            solutions = solutions[:1]
             # print(self.get_score(solutions[0]))
             # ok = solutions[: len(solutions) // 2]
             # # # bad = solutions[10:]

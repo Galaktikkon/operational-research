@@ -43,7 +43,7 @@ class Problem:
             + [f"{j}: {str(v)}" for j, v in enumerate(self.vehicles)]
             + ["\nPackages"]
             + [f"{k}: {str(p)}" for k, p in enumerate(self.packages)]
-            + ["\nGraph (dist, time)"]
+            + ["\nGraph"]
             + [str(self.graph)]
             + [""]
         )

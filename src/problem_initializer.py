@@ -54,7 +54,7 @@ class ProblemInitializer:
 
         weight = np.round(np.random.rand() * 10, 2)
         start_time = 0  # np.random.randint(1, 2) * 60
-        end_time = np.random.randint(5, 9) * 60
+        end_time = 8 * 60  # np.random.randint(5, 9) * 60
         type = "pickup" if np.random.randint(2) else "delivery"
 
         return Package(address, weight, start_time, end_time, type)
@@ -67,7 +67,7 @@ class ProblemInitializer:
         for i, (x, y) in enumerate(points):
             for j, (a, b) in enumerate(points[i + 1 :], start=i + 1):
                 dist = np.round(np.sqrt((a - x) ** 2 + (b - y) ** 2), 2)
-                time = np.round(dist * (0.5 + np.random.rand()), 2)
+                time = dist  # np.round(dist * (0.5 + np.random.rand()), 2)
 
                 routes.append((i, j, dist, time))
 
