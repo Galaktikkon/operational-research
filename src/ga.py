@@ -1,3 +1,4 @@
+import sys
 from utils import *
 import numpy as np
 from model.solution import Solution
@@ -5,7 +6,6 @@ from model.problem import Problem
 from solution_checker import SolutionChecker
 import functools
 from copy import deepcopy
-from ui import draw_solution
 
 
 class GA:
@@ -30,14 +30,19 @@ class GA:
         return rates + fuel_cost + delay
 
     def crossover(self, s1: Solution, s2: Solution):
+        for _ in range(100):
+            s = self._crossover(s1, s1)
+            if s is not None:
+                return s
+        return None
+
+    def _crossover(self, s1: Solution, s2: Solution):
         problem = self.problem
         warehouse = problem.graph.warehouse
         z_j1 = s1.z_j.copy()
-        x_jv1 = s1.x_jv.copy()
         y_k1 = s1.y_k.copy()
 
         z_j2 = s2.z_j.copy()
-        x_jv2 = s2.x_jv.copy()
         y_k2 = s2.y_k.copy()
 
         used_vehicles = np.unique(np.append(y_k1, y_k2))
@@ -123,7 +128,7 @@ class GA:
             if self.checker.is_feasible(s):
                 return s
             else:
-                return solution
+                # return solution
                 y_k[k] = old_val
 
         used_vehicles = np.unique(y_k)
@@ -140,7 +145,7 @@ class GA:
             if self.checker.is_feasible(s):
                 return s
             else:
-                return solution
+                # return solution
                 y_k[y_k == a], y_k[y_k == b] = b, a
 
         # zamiana z niewykorzystanym autem
@@ -161,7 +166,7 @@ class GA:
             if self.checker.is_feasible(s):
                 return s
             else:
-                return solution
+                # return solution
                 z_j[a] = z_j[b]
                 z_j[b] = old_val
                 y_k[y_k == b] = a
@@ -181,29 +186,41 @@ class GA:
                 if self.checker.is_feasible(s):
                     # print(s.get_route(j), self.get_score(s), a, b, route.size)
                     return s
-                # else:
-                #     return solution
-                #     x_jv[j, a], x_jv[j, b] = x_jv[j, b], x_jv[j, a]
+                else:
+                    # return solution
+                    x_jv[j, a], x_jv[j, b] = x_jv[j, b], x_jv[j, a]
 
         return solution
 
-    def run(self):
+    def run(self, max_iter=1000):
         solutions = self.initial_population
         solutions.sort(key=lambda s: self.get_score(s))
-        best = deepcopy(solutions[0])
+        initial_best = deepcopy(solutions[0])
+        l = len(solutions)
 
-        for i in range(100):
-            solutions = solutions + [self.mutation(s) for s in solutions]
+        pairs = [(i, j) for i in range(l // 2) for j in range(i + 1, l // 2)]
+
+        def get_pairs():
+            index = np.random.randint(low=0, high=len(pairs), size=(l // 2))
+            return [pairs[i] for i in index]
+
+        for i in range(max_iter):
             solutions.sort(key=lambda s: self.get_score(s))
-            solutions = solutions[:1]
-            # print(self.get_score(solutions[0]))
-            # ok = solutions[: len(solutions) // 2]
-            # # # bad = solutions[10:]
 
-            # solutions = ok + [self.mutation(s) for s in ok]
-            # # solutions.sort(key=lambda s: self.get_score(s))
-            if i % 100 == 0:
-                print(i)
+            new = [self.crossover(solutions[i], solutions[j]) for i, j in get_pairs()]
+            new = [self.mutation(n) for n in new if n]
+            o = 1
+            while len(new) < l // 2:
+                new.append(solutions[l // 2 + o])
+                o += 1
 
-        print(self.get_score(best), self.get_score(solutions[0]))
-        return best, solutions[0]
+            solutions = solutions[: l // 2] + new
+
+            sys.stdout.write("\r" + " " * 80 + "\r" + str(i))
+            sys.stdout.flush()
+
+        solutions.sort(key=lambda s: self.get_score(s))
+        print()
+
+        # print(self.get_score(best), self.get_score(solutions[0]))
+        return initial_best, solutions[0]

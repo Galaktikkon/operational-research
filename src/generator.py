@@ -77,6 +77,10 @@ class Generator:
                 if candidate not in feasible_solutions:
                     feasible_solutions.add(candidate)
 
+        sys.stdout.write(
+            f"\rAttempts: {attempts}/{max_attempts} | Solutions found: {len(feasible_solutions)}"
+        )
+        sys.stdout.flush()
         print()
 
         return list(feasible_solutions)
