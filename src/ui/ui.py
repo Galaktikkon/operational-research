@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 def draw_solution(solution: Solution):
-    points = solution.problem.graph.points.reshape(2, -1)
+    points = solution.problem.graph.points.T
 
     plt.figure(figsize=(12, 8))
     plt.scatter(points[0], points[1], s=60)
@@ -27,7 +27,7 @@ def draw_solution(solution: Solution):
 
 def draw_comparison(s1: Solution, s2: Solution):
     _, axes = plt.subplots(1, 2, figsize=(16, 7))
-    points = s1.problem.graph.points.reshape(2, -1)
+    points = s1.problem.graph.points.T
     axes[0].scatter(points[0], points[1], s=60)
 
     w = s1.problem.graph.warehouse
@@ -48,7 +48,7 @@ def draw_comparison(s1: Solution, s2: Solution):
     for i in range(points.shape[1]):
         axes[0].annotate(f"{i}", (points[0][i], points[1][i]))
 
-    points = s2.problem.graph.points.reshape(2, -1)
+    points = s2.problem.graph.points.T
     axes[1].scatter(points[0], points[1], s=60)
 
     w = s2.problem.graph.warehouse

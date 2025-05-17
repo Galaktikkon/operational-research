@@ -17,7 +17,7 @@ class GA:
         self.initial_population = initial_population
 
     @functools.cache
-    def get_score(self, solution: Solution):
+    def get_cost(self, solution: Solution):
         c_i = np.array([c.hourly_rate / 60 for c in self.problem.couriers])
         p_j = np.array([v.fuel_consumption for v in self.problem.vehicles])
 
@@ -194,7 +194,7 @@ class GA:
 
     def run(self, max_iter=1000):
         solutions = self.initial_population
-        solutions.sort(key=lambda s: self.get_score(s))
+        solutions.sort(key=lambda s: self.get_cost(s))
         initial_best = deepcopy(solutions[0])
         l = len(solutions)
 
@@ -205,10 +205,11 @@ class GA:
             return [pairs[i] for i in index]
 
         for i in range(max_iter):
-            solutions.sort(key=lambda s: self.get_score(s))
+            solutions.sort(key=lambda s: self.get_cost(s))
 
-            new = [self.crossover(solutions[i], solutions[j]) for i, j in get_pairs()]
-            new = [self.mutation(n) for n in new if n]
+            # new = [self.crossover(solutions[i], solutions[j]) for i, j in get_pairs()]
+            # new = [self.mutation(n) for n in new if n]
+            new = [self.mutation(n) for n in solutions[: l // 2]]
             o = 1
             while len(new) < l // 2:
                 new.append(solutions[l // 2 + o])
@@ -219,8 +220,7 @@ class GA:
             sys.stdout.write("\r" + " " * 80 + "\r" + str(i))
             sys.stdout.flush()
 
-        solutions.sort(key=lambda s: self.get_score(s))
+        solutions.sort(key=lambda s: self.get_cost(s))
         print()
 
-        # print(self.get_score(best), self.get_score(solutions[0]))
         return initial_best, solutions[0]

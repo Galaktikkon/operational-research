@@ -30,11 +30,11 @@ class ProblemInitializer:
 
     def random_courier(self):
         rate = np.random.randint(100)
-        work_limit = np.random.randint(4, 9)
+        work_limit = 10000  # 8  # np.random.randint(4, 9)
         return Courier(rate, work_limit * 60)
 
     def random_vehicle(self):
-        capacity = np.random.randint(10, 100)
+        capacity = 10000  # np.random.randint(10, 100)
         fuel = np.round(np.random.rand() * 20, 2)
         return Vehicle(capacity, fuel)
 
@@ -54,7 +54,7 @@ class ProblemInitializer:
 
         weight = np.round(np.random.rand() * 10, 2)
         start_time = 0  # np.random.randint(1, 2) * 60
-        end_time = 8 * 60  # np.random.randint(5, 9) * 60
+        end_time = 6000  # 8 * 60  # np.random.randint(5, 9) * 60
         type = "pickup" if np.random.randint(2) else "delivery"
 
         return Package(address, weight, start_time, end_time, type)
