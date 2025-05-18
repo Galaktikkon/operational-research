@@ -53,37 +53,62 @@ class GA:
         z_j2 = s2.z_j.copy()
         y_k2 = s2.y_k.copy()
 
-        used_vehicles = np.unique(np.append(y_k1, y_k2))
-        unused_vehicles = np.setdiff1d(
-            np.arange(self.problem.n_vehicles), used_vehicles
+        x_jv = np.full_like(s1.x_jv, warehouse)
+        y_k = np.full_like(y_k1, -1)
+        z_j = np.full_like(z_j1, -1)
+
+        vehicles_intersection = np.intersect1d(y_k1, y_k2)
+        vehicles_symdiff = np.setdiff1d(
+            np.union1d(y_k1, y_k2), vehicles_intersection, assume_unique=True
         )
-        vehicles = used_vehicles if used_vehicles.size else unused_vehicles
-
-        used_couriers = np.unique(np.append(z_j1, z_j2))
-        unused_couriers = np.setdiff1d(
-            np.arange(self.problem.n_couriers), used_couriers
+        vehicles_remaining = np.setdiff1d(
+            np.arange(self.problem.n_vehicles),
+            np.union1d(y_k1, y_k2),
+            assume_unique=True,
         )
+        vehicle_arrays = [vehicles_intersection, vehicles_symdiff, vehicles_remaining]
 
-        x_jv = np.full((problem.n_vehicles, problem.n_nodes + 1), warehouse, dtype=int)
-        y_k = np.full(problem.n_packages, -1, dtype=int)
-        z_j = np.full(problem.n_vehicles, -1, dtype=int)
+        couriers_intersection = np.intersect1d(z_j1, z_j2, assume_unique=True)
+        couriers_intersection = couriers_intersection[couriers_intersection != -1]
+        couriers_symdiff = np.setdiff1d(
+            np.union1d(z_j1, z_j2), couriers_intersection, assume_unique=True
+        )
+        couriers_symdiff = couriers_symdiff[couriers_symdiff != -1]
+        couriers_remaining = np.setdiff1d(
+            np.arange(self.problem.n_couriers), np.union1d(z_j1, z_j2)
+        )
+        courier_arrays = [couriers_intersection, couriers_symdiff, couriers_remaining]
 
-        for k in range(self.problem.n_packages):
-            y_k[k] = np.random.choice(vehicles)
+        def get_rnd(arr):
+            if not arr[2].size:
+                if not arr[1].size:
+                    return np.random.choice(arr[0])
 
-        for j in np.unique(y_k):
-            for _ in range(100):
-                i = np.random.choice(used_couriers)
-                if i not in z_j:
+                ix = np.random.choice([0, 1], p=[0.7, 0.3])
+                return np.random.choice(arr[ix])
+
+            ix = np.random.choice([0, 1, 2], p=[0.6, 0.3, 0.1])
+            return np.random.choice(arr[ix])
+
+        capacity = {j: 0 for j in range(problem.n_vehicles)}
+
+        for k, p in enumerate(problem.packages):
+            while y_k[k] == -1:
+                j = get_rnd(vehicle_arrays)
+                if capacity[j] + p.weight <= problem.vehicles[j].capacity:
+                    capacity[j] += p.weight
+                    y_k[k] = j
+                    x_jv[j] = calculate_vehicle_route(problem, y_k, j)
+
+        vs = np.hstack([np.random.permutation(arr) for arr in vehicle_arrays])
+
+        for j in vs:
+            while z_j[j] == -1:
+                i = get_rnd(courier_arrays)
+                if (i, j) in problem.permissions:
                     z_j[j] = i
-                    break
-            else:
-                i = np.random.choice(unused_couriers)
-                while i in z_j:
-                    i = np.random.choice(unused_couriers)
-                z_j[j] = i
 
-            x_jv[j] = calculate_vehicle_route(problem, y_k, j)
+        # TODO: problem, trasy są od nowa losowo
 
         s = Solution(problem, x_jv, y_k, z_j)
 
@@ -140,9 +165,11 @@ class GA:
             solutions.sort(key=lambda s: self.get_cost(s))
 
             # new = [self.crossover(solutions[i], solutions[j]) for i, j in get_pairs()]
+
+            # print("Crossovers", crossok, "/", crossok + crossnok)
             # new = [self.mutation(n) for n in new if n]
             new = [self.mutation(n) for n in solutions[: l // 2]]
-            o = 1
+            o = 0
             while len(new) < l // 2:
                 new.append(solutions[l // 2 + o])
                 o += 1
