@@ -10,6 +10,7 @@ class CouriersMutation(Mutation):
         z_j = self.solution.z_j
 
         drivers = np.unique(z_j)
+        drivers = drivers[drivers != -1]
 
         self.i1 = np.random.choice(drivers)
         self.i2 = np.random.randint(self.problem.n_couriers)
@@ -21,13 +22,11 @@ class CouriersMutation(Mutation):
         j2 = np.where(z_j == self.i2)[0]
         self.j2 = j2[0] if j2.size else None
 
-        if self.j1 is not None:
-            z_j[self.j1] = self.i2
+        z_j[self.j1] = self.i2
         if j2 is not None:
             z_j[j2] = self.i1
 
     def _reverse(self):
-        if self.j1 is not None:
-            self.solution.z_j[self.j1] = self.i1
+        self.solution.z_j[self.j1] = self.i1
         if self.j2 is not None:
             self.solution.z_j[self.j2] = self.i2

@@ -47,6 +47,12 @@ class PackagesMutation(Mutation):
             old_j_packages = np.where(y_k == self.old_j)[0]
             old_j_addresses = [self.problem.packages[k].address for k in old_j_packages]
 
+            self.old_z = None
+
+            if not len(old_j_addresses):
+                self.old_z = self.solution.z_j[self.old_j]
+                self.solution.z_j[self.old_j] = -1
+
             if p.address not in old_j_addresses:
                 o = np.where(x_jv[self.old_j] == p.address)[0][0]
 
@@ -60,3 +66,6 @@ class PackagesMutation(Mutation):
         self.solution.y_k[self.k] = self.old_j
         self.solution.x_jv[self.old_j] = self.old_x[0]
         self.solution.x_jv[self.j] = self.old_x[1]
+
+        if self.old_z is not None:
+            self.solution.z_j[self.old_j] = self.old_z
