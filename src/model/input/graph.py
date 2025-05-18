@@ -31,6 +31,9 @@ class Graph:
 
         self.n_nodes = len(set([t[0] for t in self.routes]))
 
+        self.dist = {(u, v): d for (u, v, d, _) in self.routes}
+        self.time = {(u, v): t for (u, v, _, t) in self.routes}
+
         self.points = points
 
     def __repr__(self):

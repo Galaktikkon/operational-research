@@ -1,8 +1,6 @@
 import numpy as np
 from .problem import Problem
-from typing import NoReturn, Union
-from random import sample, choice
-from itertools import dropwhile
+from itertools import dropwhile, accumulate
 
 
 def trim_trailing(lst, val):
@@ -69,7 +67,14 @@ class Solution:
             time = [f"{t:5.2f}" for t in time]
             capacity = [f"{c:5.2f}" for c in capacity]
 
-            rows.append("      ".join(time) + " [s]")
+            route_pairs = [p for p in zip(route, route[1:])]
+
+            dist = [0] + [self.problem.graph.dist[u, v] for u, v in route_pairs]
+            dist = list(accumulate(dist))
+            dist = [f"{d:5.2f}" for d in dist]
+
+            rows.append("      ".join(time) + " [min]")
+            rows.append("      ".join(dist) + " [km]")
             rows.append("      ".join(capacity) + " [kg]")
 
             rows.append("")
@@ -177,67 +182,3 @@ class Solution:
                 self._m_jv[j, next_v] = self._m_jv[j, v] - delivery + pickup
 
         return self._m_jv
-
-    # def __add__(self, other: "Solution") -> Union[NoReturn, "Solution"]:
-    #     """Crossing between two solutions.
-    #     Args:
-    #         other (Solution): other solution to cross with.
-    #     Returns:
-    #         Solution: offspring solution.
-    #     Raises:
-    #         TypeError: Crossing allowed only between two solutions.
-    #     """
-
-    #     if not isinstance(other, Solution):
-    #         raise TypeError("Crossing allowed only between two solutions.")
-
-    #     offspring = Solution(
-    #         self.problem,
-    #         np.zeros_like(self.x_jvuv),
-    #         np.zeros_like(self.y_k),
-    #         np.zeros_like(self.z_j),
-    #     )
-
-    #     z1 = self.z_j
-    #     z2 = other.z_j
-
-    #     permissions = offspring.problem.permissions
-
-    #     for j in range(len(offspring.z_j)):
-    #         selected_driver = choice([z1[j], z2[j], None])
-
-    #         if selected_driver is not None and permissions[selected_driver, j]:
-    #             offspring.z_j[j] = selected_driver
-    #         else:
-    #             valid_drivers = [
-    #                 i for i in range(permissions.shape[0]) if permissions[i, j] == 1
-    #             ]
-    #             if valid_drivers:
-    #                 offspring.z_j[j] = choice(valid_drivers)
-    #             else:
-    #                 offspring.z_j[j] = None
-
-    #     return offspring
-
-    # def swap_random_pair_1D(self, list_):
-    #     indices = [i for i in range(len(list_))]
-    #     if len(indices) <= 2:
-    #         return
-    #     first, second = sample(indices, 2)
-    #     list_[first], list_[second] = list_[second], list_[first]
-
-    # def swap_random_pair_2D(self, matrix):
-    #     non_zeros = np.argwhere(matrix != 0)
-    #     zeros = np.argwhere(matrix == 0)
-    #     if not (non_zeros and zeros):
-    #         return
-    #     zero = choice(zeros)
-    #     non_zero = choice(non_zeros)
-    #     i1, j1 = zero
-    #     i2, j2 = non_zero
-    #     matrix[i1, j1], matrix[i2, j2] = matrix[i2, j2], matrix[i1, j1]
-
-    # def __invert__(self):
-    #     self.swap_random_pair_1D(self.z_j)
-    #     self.swap_random_pair_1D(self.y_k)
-    #     self.swap_random_pair_2D(self.x_jvuv)

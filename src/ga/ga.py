@@ -6,6 +6,10 @@ from model.problem import Problem
 from solution_checker import SolutionChecker
 import functools
 from copy import deepcopy
+from .mutations import *
+
+crossok = 0
+crossnok = 0
 
 
 class GA:
@@ -30,10 +34,14 @@ class GA:
         return rates + fuel_cost + delay
 
     def crossover(self, s1: Solution, s2: Solution):
+        global crossok, crossnok
         for _ in range(100):
             s = self._crossover(s1, s2)
             if s is not None:
+                crossok += 1
                 return s
+            else:
+                crossnok += 1
         return None
 
     def _crossover(self, s1: Solution, s2: Solution):
@@ -82,121 +90,46 @@ class GA:
         return s if self.checker.is_feasible(s) else None
 
     def mutation(self, solution: Solution):
-        z_j = solution.z_j.copy()
+        global couriers_swap, vehicles_swap, packages_swap, new_vehicle
+
         x_jv = solution.x_jv.copy()
         y_k = solution.y_k.copy()
+        z_j = solution.z_j.copy()
 
-        # zamiana losowych kurierow
-        if np.random.rand() < 0.5:
-            i1 = np.random.randint(self.problem.n_couriers)
-            i2 = np.random.randint(self.problem.n_couriers)
-            while self.problem.n_couriers > 1 and i1 == i2:
-                i2 = np.random.randint(self.problem.n_couriers)
+        solution = Solution(solution.problem, x_jv, y_k, z_j)
+        original = Solution(solution.problem, x_jv, y_k, z_j)
 
-            j1 = np.where(z_j == i1)[0]
-            j1 = j1[0] if j1.size else None
+        mutations = [
+            # CouriersMutation(solution),
+            # PackagesMutation(solution),
+            # UsedVehiclesMutation(solution),
+            # UnusedVehiclesMutation(solution),
+        ] + [RouteMutation(solution, j) for j in np.random.permutation(np.unique(y_k))]
 
-            j2 = np.where(z_j == i2)[0]
-            j2 = j2[0] if j2.size else None
+        mutation_order = np.random.permutation(np.arange(len(mutations)))
 
-            if j1 is not None:
-                z_j[j1] = i2
-            if j2 is not None:
-                z_j[j2] = i1
+        for m in mutation_order:
+            mutation: Mutation = mutations[m]
 
-            s = Solution(self.problem, x_jv, y_k, z_j)
-            if self.checker.is_feasible(s):
-                return s
-            else:
+            if not mutation.is_possible():
+                continue
+
+            mutation.mutate_solution()
+
+            if self.checker.is_feasible(solution):
                 return solution
-                if j1 is not None:
-                    z_j[j1] = i1
-                if j2 is not None:
-                    z_j[j2] = i2
-
-        # przeniesienie paczki
-        if np.random.rand() < 0.5 and self.problem.n_packages >= 2:
-            k = np.random.randint(self.problem.n_packages)
-            for _ in range(100):
-                j = np.random.randint(self.problem.n_vehicles)
-                if j in y_k and y_k[k] != j:
-                    old_val = y_k[k]
-                    y_k[k] = j
-                    break
-
-            s = Solution(self.problem, x_jv, y_k, z_j)
-            if self.checker.is_feasible(s):
-                return s
             else:
-                # return solution
-                y_k[k] = old_val
-
-        used_vehicles = np.unique(y_k)
-
-        # zamiana wykorzystanych aut
-        if np.random.rand() < 0.5 and used_vehicles.size >= 2:
-            a = np.random.choice(used_vehicles)
-            b = np.random.choice(used_vehicles)
-            while a == b:
-                b = np.random.choice(used_vehicles)
-
-            y_k[y_k == a], y_k[y_k == b] = b, a
-            s = Solution(self.problem, x_jv, y_k, z_j)
-            if self.checker.is_feasible(s):
-                return s
-            else:
-                # return solution
-                y_k[y_k == a], y_k[y_k == b] = b, a
-
-        # zamiana z niewykorzystanym autem
-        if np.random.rand() < 0.5 and used_vehicles.size != self.problem.n_vehicles:
-            unused_vehicles = np.setdiff1d(
-                np.arange(self.problem.n_vehicles), used_vehicles
-            )
-
-            a = np.random.choice(used_vehicles)
-            b = np.random.choice(unused_vehicles)
-
-            old_val = z_j[b]
-            z_j[b] = z_j[a]
-            z_j[a] = -1
-
-            y_k[y_k == a] = b
-            s = Solution(self.problem, x_jv, y_k, z_j)
-            if self.checker.is_feasible(s):
-                return s
-            else:
-                # return solution
-                z_j[a] = z_j[b]
-                z_j[b] = old_val
-                y_k[y_k == b] = a
-
-        # zmiana trasy
-        for j in np.unique(y_k):
-            route = solution.get_route(j)
-            if route.size > 1 and np.random.rand() < 1:
-                a = np.random.randint(route.size) + 1
-                b = np.random.randint(route.size) + 1
-                while a == b:
-                    b = np.random.randint(route.size) + 1
-
-                x_jv[j, a], x_jv[j, b] = x_jv[j, b], x_jv[j, a]
-
-                s = Solution(self.problem, x_jv, y_k, z_j)
-                if self.checker.is_feasible(s):
-                    # print(s.get_route(j), self.get_score(s), a, b, route.size)
-                    return s
-                else:
-                    # return solution
-                    x_jv[j, a], x_jv[j, b] = x_jv[j, b], x_jv[j, a]
+                mutation.reverse()
+                assert solution == original
 
         return solution
 
     def run(self, max_iter=1000):
         solutions = self.initial_population
+        l = len(solutions)
+
         solutions.sort(key=lambda s: self.get_cost(s))
         initial_best = deepcopy(solutions[0])
-        l = len(solutions)
 
         pairs = [(i, j) for i in range(l // 2) for j in range(i + 1, l // 2)]
 
@@ -222,5 +155,19 @@ class GA:
 
         solutions.sort(key=lambda s: self.get_cost(s))
         print()
+
+        print("Crossovers", crossok, "/", crossok + crossnok)
+
+        mutations = [
+            CouriersMutation,
+            PackagesMutation,
+            UsedVehiclesMutation,
+            UnusedVehiclesMutation,
+            RouteMutation,
+        ]
+
+        m: Mutation
+        for m in mutations:
+            print(m.__name__, m.times_feasible_created, "/", m.times_run)
 
         return initial_best, solutions[0]
