@@ -46,6 +46,7 @@ class UnusedVehiclesMutation(Mutation):
 
     def _mutate_solution(self):
         used_vehicles = self.used_vehicles
+        x_jv = self.solution.x_jv
         y_k = self.solution.y_k
         z_j = self.solution.z_j
 
@@ -56,15 +57,25 @@ class UnusedVehiclesMutation(Mutation):
         self.a = np.random.choice(used_vehicles)
         self.b = np.random.choice(unused_vehicles)
 
-        self.old_val = z_j[self.b]
+        self.old_z = z_j[self.b]
         z_j[self.b] = z_j[self.a]
         z_j[self.a] = -1
 
+        self.old_y = y_k.copy()
         y_k[y_k == self.a] = self.b
 
+        self.old_x = x_jv[self.a].copy()
+        x_jv[self.b] = x_jv[self.a].copy()
+        x_jv[self.a] = np.full_like(x_jv[self.a], self.solution.problem.graph.warehouse)
+
     def _reverse(self):
-        y_k = self.solution.y_k
+        x_jv = self.solution.x_jv
         z_j = self.solution.z_j
+
+        x_jv[self.b] = np.full_like(x_jv[self.a], self.solution.problem.graph.warehouse)
+        x_jv[self.a] = self.old_x
+
+        self.solution.y_k = self.old_y
+
         z_j[self.a] = z_j[self.b]
-        z_j[self.b] = self.old_val
-        y_k[y_k == self.b] = self.a
+        z_j[self.b] = self.old_z

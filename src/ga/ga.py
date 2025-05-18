@@ -98,13 +98,11 @@ class GA:
         original = Solution(solution.problem, x_jv.copy(), y_k.copy(), z_j.copy())
 
         mutations = [
-            # CouriersMutation(solution),
+            CouriersMutation(solution),
             PackagesMutation(solution),
-            # UsedVehiclesMutation(solution),
-            # UnusedVehiclesMutation(solution),
-        ] + [
-            # RouteMutation(solution, j) for j in np.random.permutation(np.unique(y_k))
-        ]
+            UsedVehiclesMutation(solution),
+            UnusedVehiclesMutation(solution),
+        ] + [RouteMutation(solution, j) for j in np.random.permutation(np.unique(y_k))]
 
         mutation_order = np.random.permutation(np.arange(len(mutations)))
 
@@ -138,7 +136,7 @@ class GA:
             index = np.random.randint(low=0, high=len(pairs), size=(l // 2))
             return [pairs[i] for i in index]
 
-        for i in range(max_iter):
+        for i in range(1, max_iter + 1):
             solutions.sort(key=lambda s: self.get_cost(s))
 
             # new = [self.crossover(solutions[i], solutions[j]) for i, j in get_pairs()]
