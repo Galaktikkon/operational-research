@@ -8,7 +8,7 @@ class SolutionChecker:
         self.problem = problem
         self.solution: Solution | None = None
 
-    def is_feasible(self, solution: Solution):
+    def is_feasible(self, solution: Solution, debug=False):
         self.solution = solution
 
         func_names = sorted(
@@ -18,7 +18,8 @@ class SolutionChecker:
 
         for func, name in zip(funcs, func_names):
             if not func():
-                # print(f"\nerror in {name}")
+                if debug:
+                    print(f"\nerror in {name}")
                 return False
 
         self.solution = None

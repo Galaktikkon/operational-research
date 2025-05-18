@@ -26,6 +26,13 @@ class Solution:
         self._l_vj: np.ndarray | None = None
         self._m_jv: np.ndarray | None = None
 
+    def recalculate(self):
+        self._t_i = None
+        self._v_k = None
+        self._d_j = None
+        self._l_vj = None
+        self._m_jv = None
+
     def __hash__(self):
         x_hashable = tuple(self.x_jv.flatten().tolist())
         y_hashable = tuple(self.y_k.tolist())

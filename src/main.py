@@ -28,6 +28,6 @@ def main(
     print(f"AFTER {ga.get_cost(b)}")
     print(b)
 
-    print(ga.get_cost(a), ga.get_cost(b))
+    print(f"{ga.get_cost(a):.2f}", f"{ga.get_cost(b):.2f}")
 
     draw_comparison(a, b)

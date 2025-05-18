@@ -90,21 +90,21 @@ class GA:
         return s if self.checker.is_feasible(s) else None
 
     def mutation(self, solution: Solution):
-        global couriers_swap, vehicles_swap, packages_swap, new_vehicle
+        x_jv = solution.x_jv
+        y_k = solution.y_k
+        z_j = solution.z_j
 
-        x_jv = solution.x_jv.copy()
-        y_k = solution.y_k.copy()
-        z_j = solution.z_j.copy()
-
-        solution = Solution(solution.problem, x_jv, y_k, z_j)
-        original = Solution(solution.problem, x_jv, y_k, z_j)
+        solution = Solution(solution.problem, x_jv.copy(), y_k.copy(), z_j.copy())
+        original = Solution(solution.problem, x_jv.copy(), y_k.copy(), z_j.copy())
 
         mutations = [
             # CouriersMutation(solution),
-            # PackagesMutation(solution),
+            PackagesMutation(solution),
             # UsedVehiclesMutation(solution),
             # UnusedVehiclesMutation(solution),
-        ] + [RouteMutation(solution, j) for j in np.random.permutation(np.unique(y_k))]
+        ] + [
+            # RouteMutation(solution, j) for j in np.random.permutation(np.unique(y_k))
+        ]
 
         mutation_order = np.random.permutation(np.arange(len(mutations)))
 
@@ -115,6 +115,7 @@ class GA:
                 continue
 
             mutation.mutate_solution()
+            assert solution != original
 
             if self.checker.is_feasible(solution):
                 return solution

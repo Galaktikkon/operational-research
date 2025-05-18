@@ -21,9 +21,9 @@ class Mutation:
         self._mutate_solution()
         self.__class__.times_feasible_created += 1
         self.__class__.times_run += 1
-        pass
+        self.solution.recalculate()
 
     def reverse(self):
         self._reverse()
         self.__class__.times_feasible_created -= 1
-        pass
+        self.solution.recalculate()
