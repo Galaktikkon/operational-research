@@ -1,10 +1,33 @@
 import numpy as np
-from model.input import *
+
+from model.input import Courier, Package, Vehicle
+from model.input.graph import Graph
 
 
 class Problem:
-    """
-    permissions : list[(courier, vehicle)]
+    """Problem class for the vehicle routing problem with time windows.
+
+    Args
+    ----
+        couriers (list[Courier]): List of *n* couriers.
+        vehicles (list[Vehicle]): List of *m* vehicles.
+        packages (list[Package]): List of *f* packages.
+        permissions (list[tuple[int, int]]): *r*<sub>i,j</sub> list of permissions for each courier and vehicle. It is a mapping courier -> vehicle.
+        graph (Graph): Graph object representing the city network.
+
+    Attributes
+    ----------
+        couriers (list[Courier]): List of couriers.
+        vehicles (list[Vehicle]): List of vehicles.
+        packages (list[Package]): List of packages.
+        permissions (list[tuple[int, int]]): List of permissions for each courier and vehicle. It is a mapping courier -> vehicle.
+        graph (Graph): Graph object representing the city network.
+        n_couriers (int): Number of couriers.
+        n_vehicles (int): Number of vehicles.
+        n_packages (int): Number of packages.
+        n_nodes (int): Number of nodes in the graph.
+        s_uv (np.ndarray): Matrix mapping the time taken to travel from node u to node v.
+        g_uv (np.ndarray): Matrix mapping the distance taken to travel from node u to node v.
     """
 
     def __init__(
@@ -15,9 +38,6 @@ class Problem:
         permissions: list[tuple[int, int]],
         graph: Graph,
     ):
-        """
-        permissions : list[(courier, vehicle)]
-        """
         self.couriers = couriers
         self.vehicles = vehicles
         self.packages = packages
@@ -50,6 +70,10 @@ class Problem:
         return "\n".join(rows)
 
     def _calc_s_uv_g_uv(self):
+        """Calculates the *s*<sub>uv</sub> and *g*<sub>uv</sub>  matrices for the problem:
+        - *s*<sub>uv</sub> maps the time taken to travel from node *u* to node *v*,
+        - *g*<sub>uv</sub> maps the distance taken to travel from node *u* to node *v*.
+        """
         n_nodes = self.graph.n_nodes
 
         self.s_uv = np.zeros((n_nodes, n_nodes))

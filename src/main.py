@@ -1,7 +1,7 @@
+from ga import GA
 from generator import Generator
 from problem_initializer import ProblemInitializer
-from ga import GA
-from ui import *
+from ui import draw_comparison
 
 
 def main(
@@ -12,7 +12,6 @@ def main(
     max_attempts=int(1e6),
     max_iter=10000,
 ):
-
     problem = ProblemInitializer(n_couriers, n_vehicles, n_packages).get_problem()
     print(problem)
 

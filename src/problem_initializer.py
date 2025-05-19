@@ -1,9 +1,35 @@
 import numpy as np
+
+from model import Graph
+from model.input import Courier, Package, Vehicle
 from model.problem import Problem
-from model.input import *
 
 
 class ProblemInitializer:
+    """Class to generate a problem instance for the vehicle routing problem.
+
+    Args
+    ----
+        n_couriers (int): Number of couriers.
+        n_vehicles (int): Number of vehicles.
+        n_packages (int): Number of packages.
+
+    Methods
+    -------
+        get_problem() -> Problem:
+            Returns a problem instance with the generated couriers, vehicles, packages, permissions, and graph.
+        random_courier() -> Courier:
+            Generates a random courier with a random rate and work limit.
+        random_vehicle() -> Vehicle:
+            Generates a random vehicle with a random capacity and fuel.
+        random_permissions(permission_proba: float) -> List[Tuple[int, int]]:
+            Generates random permissions for couriers and vehicles.
+        random_package(max_address: int) -> Package:
+            Generates a random package with a random address, weight, start time, end time, and type.
+        random_graph(n_nodes: int, max_coord: int = 100) -> Graph:
+            Generates a random graph with nodes and edges.
+    """
+
     def get_problem(self) -> Problem:
         return Problem(
             self.couriers,
@@ -29,16 +55,40 @@ class ProblemInitializer:
         self.graph = self.random_graph(len(addresses) + 1, max_coord=50)
 
     def random_courier(self):
+        """
+        Generate a random courier with a random rate and work limit.
+
+        Returns
+        -------
+            Courier: A courier object with random rate and work limit.
+        """
         rate = np.random.randint(100)
         work_limit = 1e10  # 8  # np.random.randint(4, 9)
         return Courier(rate, work_limit * 60)
 
     def random_vehicle(self):
+        """
+        Generate a random vehicle with a random capacity and fuel.
+
+        Returns
+        -------
+            Vehicle: A vehicle object with random capacity and fuel.
+        """
         capacity = 1e10  # np.random.randint(10, 100)
         fuel = np.round(np.random.rand() * 20, 2)
         return Vehicle(capacity, fuel)
 
     def random_permissions(self, permission_proba):
+        """
+        Generate random permissions for couriers and vehicles.
+
+        Args
+        ----
+            permission_proba (float): Probability of a courier being assigned to a vehicle.
+        Returns
+        -------
+            List[Tuple[int, int]]: List of tuples representing the permissions.
+        """
         n = len(self.couriers)
         m = len(self.vehicles)
 
@@ -50,6 +100,18 @@ class ProblemInitializer:
         ]
 
     def random_package(self, max_address):
+        """
+        Generate a random package with a random address, weight, start time, end time, and type.
+
+        Args
+        ----
+            max_address (int): Maximum address value for the package.
+
+        Returns
+        -------
+            Package: A package object with random address, weight, start time, end time, and type.
+        """
+
         address = np.random.randint(max_address)
 
         weight = np.round(np.random.rand() * 10, 2)
@@ -60,6 +122,18 @@ class ProblemInitializer:
         return Package(address, weight, start_time, end_time, type)
 
     def random_graph(self, n_nodes, max_coord=100):
+        """
+        Generate a random graph with nodes and edges.
+
+        Args
+        ----
+            n_nodes (int): Number of nodes in the graph.
+            max_coord (int): Maximum coordinate value for the nodes.
+
+        Returns
+        -------
+            Graph: A graph object with nodes and edges.
+        """
         points = np.random.uniform(0, max_coord, (n_nodes, 2))
 
         routes = []

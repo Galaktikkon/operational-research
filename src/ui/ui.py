@@ -1,5 +1,6 @@
-from model.solution import Solution
 import matplotlib.pyplot as plt
+
+from model.solution import Solution
 
 
 def draw_solution(solution: Solution):

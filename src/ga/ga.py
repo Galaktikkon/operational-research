@@ -1,12 +1,22 @@
-import sys
-from utils import *
-import numpy as np
-from model.solution import Solution
-from model.problem import Problem
-from solution_checker import SolutionChecker
 import functools
+import sys
 from copy import deepcopy
-from .mutations import *
+
+import numpy as np
+
+from model.problem import Problem
+from model.solution import Solution
+from solution_checker import SolutionChecker
+from utils import calculate_vehicle_route
+
+from .mutations import (
+    CouriersMutation,
+    Mutation,
+    PackagesMutation,
+    RouteMutation,
+    UnusedVehiclesMutation,
+    UsedVehiclesMutation,
+)
 
 crossok = 0
 crossnok = 0
@@ -150,7 +160,7 @@ class GA:
 
     def run(self, max_iter=1000):
         solutions = self.initial_population
-        l = len(solutions)
+        l = len(solutions)  # noqa: E741
 
         solutions.sort(key=lambda s: self.get_cost(s))
         initial_best = deepcopy(solutions[0])

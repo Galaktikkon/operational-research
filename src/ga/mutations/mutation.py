@@ -1,5 +1,6 @@
-from model import Solution
 import numpy as np
+
+from model import Solution
 
 
 class Mutation:
@@ -27,3 +28,12 @@ class Mutation:
         self._reverse()
         self.__class__.times_feasible_created -= 1
         self.solution.recalculate()
+
+    def _reverse(self):
+        raise NotImplementedError("Subclasses should implement this method.")
+
+    def _mutate_solution(self):
+        raise NotImplementedError("Subclasses should implement this method.")
+
+    def _is_possible(self):
+        raise NotImplementedError("Subclasses should implement this method.")

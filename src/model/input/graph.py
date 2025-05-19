@@ -1,20 +1,18 @@
 from copy import deepcopy
-import pandas as pd
+
 import numpy as np
-
-
-def _sym(routes: list[tuple[int, int, float, float]]):
-    original = deepcopy(routes)
-    symmetrical = [(b, a, dist, time) for a, b, dist, time in original]
-
-    nodes = {t[0] for t in original} | {t[1] for t in original}
-
-    return original + symmetrical + [(a, a, 0, 0) for a in nodes]
+import pandas as pd
 
 
 class Graph:
     """
-    routes : list[(a, b, dist, time minutes)]
+    Graph class representing a city network.
+
+    Args
+    ----
+        routes (list[tuple[int, int, float, float]]): List of routes represented as tuples (start_node, end_node, distance, time).
+        points (np.ndarray): Array of coordinates for the nodes in the graph.
+        warehouse (int): Identifier for the warehouse node. Defaults to 0.
     """
 
     def __init__(
@@ -23,10 +21,7 @@ class Graph:
         points: np.ndarray,
         warehouse=0,
     ):
-        """
-        routes : list[(a, b, dist, time minutes)]
-        """
-        self.routes = _sym(routes)
+        self.routes = self.__sym(routes)
         self.warehouse = warehouse
 
         self.n_nodes = len(set([t[0] for t in self.routes]))
@@ -43,3 +38,23 @@ class Graph:
         time = df.pivot(index="a", columns="b", values="time").to_string()
 
         return f"dist\n{dist}\n\ntime\n{time}"
+
+    def __sym(self, routes: list[tuple[int, int, float, float]]):
+        """
+        Augment the routes to include symmetric routes.
+
+        Args
+        ----
+            routes (list[tuple[int, int, float, float]]): List of routes represented as tuples (start_node, end_node, distance, time).
+
+        Returns
+        -------
+            list[tuple[int, int, float, float]]: Symmetric routes including original and reverse routes.
+        """
+
+        original = deepcopy(routes)
+        symmetrical = [(b, a, dist, time) for a, b, dist, time in original]
+
+        nodes = {t[0] for t in original} | {t[1] for t in original}
+
+        return original + symmetrical + [(a, a, 0, 0) for a in nodes]

@@ -1,6 +1,8 @@
-from .mutation import Mutation
 import numpy as np
+
 from model import Solution
+
+from .mutation import Mutation
 
 
 class RouteMutation(Mutation):

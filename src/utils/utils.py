@@ -1,8 +1,20 @@
 import numpy as np
+
 from model.problem import Problem
 
 
 def calculate_vehicle_route(problem: Problem, y_k, j):
+    """
+    Calculate the route for a vehicle based on the assignments of packages to vehicles.
+
+    Args:
+        problem (Problem): The problem instance containing the graph and warehouse information.
+        y_k (np.ndarray): Array indicating the vehicle assignment for each package.
+        j (int): The index of the vehicle for which to calculate the route.
+
+    Returns:
+        np.ndarray: The route for the vehicle.
+    """
     route = np.full(problem.n_nodes + 1, problem.graph.warehouse, dtype=int)
     vehicle_packages = np.where(y_k == j)[0]
 

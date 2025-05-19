@@ -1,5 +1,6 @@
-from .mutation import Mutation
 import numpy as np
+
+from .mutation import Mutation
 
 
 class PackagesMutation(Mutation):
@@ -39,7 +40,7 @@ class PackagesMutation(Mutation):
                 max_index = np.max(np.where(x_jv[j] != 0)[0]) + 1
                 o = np.random.randint(1, max_index)
 
-                for l in range(x_jv[j].size - 1, o, -1):
+                for l in range(x_jv[j].size - 1, o, -1):  # noqa: E741
                     x_jv[j][l] = x_jv[j][l - 1]
 
                 x_jv[j, o] = p.address

@@ -1,13 +1,21 @@
 import sys
 from typing import Optional
-from solution_checker import SolutionChecker
+
+import numpy as np
+
 from model.problem import Problem
 from model.solution import Solution
-import numpy as np
-from utils import *
+from solution_checker import SolutionChecker
+from utils import calculate_vehicle_route
 
 
 class Generator:
+    """Class to generate feasible solutions for the problem.
+    Args
+    ----
+        problem (Problem): The problem to generate solutions for.
+    """
+
     def __init__(self, problem: Problem):
         self.problem = problem
         self.checker = SolutionChecker(problem)
@@ -26,6 +34,7 @@ class Generator:
         matched_vehicles = set()
 
         for k in range(problem.n_packages):
+            # if all couriers are already assigned to vehicles
             if np.unique(z_j[z_j != -1]).size == problem.n_couriers:
                 y_k[k] = np.random.choice(list(matched_vehicles))
             else:
@@ -41,6 +50,15 @@ class Generator:
         return Solution(problem, x_jv, y_k, z_j)
 
     def _add_courier_to_vehicle(self, j):
+        """
+        Assign a courier to a vehicle. The courier is chosen randomly from the
+        list of couriers that are allowed to be assigned to the vehicle.
+
+        Args
+        ----
+            j (int): The vehicle to which the courier is assigned.
+
+        """
         problem = self.problem
         i = np.random.randint(problem.n_couriers)
         tries = 0

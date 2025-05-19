@@ -1,5 +1,6 @@
-from .mutation import Mutation
 import numpy as np
+
+from .mutation import Mutation
 
 
 class CouriersMutation(Mutation):
