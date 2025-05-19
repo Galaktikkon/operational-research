@@ -3,6 +3,6 @@
   "n_vehicles": 50,
   "n_packages": 10,
   "num_to_find": 10,
-  "max_iter": 1000,
+  "max_iter": 1e3,
   "max_attempts": 10000
 }

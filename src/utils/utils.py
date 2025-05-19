@@ -47,4 +47,18 @@ def validate_config(config: dict, func: callable) -> bool:
             print(f"Extra keys: {extra_keys}", file=sys.stderr)
         return False
 
+    for key, param in sig.parameters.items():
+        if param.annotation is inspect.Parameter.empty:
+            continue
+
+        expected_type = param.annotation
+        actual_value = config[key]
+
+        if not isinstance(actual_value, expected_type):
+            print(
+                f"Type mismatch for '{key}': expected {expected_type}, got {type(actual_value)}",
+                file=sys.stderr,
+            )
+            return False
+
     return True
