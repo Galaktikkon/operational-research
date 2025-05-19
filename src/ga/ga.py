@@ -35,84 +35,106 @@ class GA:
 
     def crossover(self, s1: Solution, s2: Solution):
         global crossok, crossnok
-        for _ in range(100):
-            s = self._crossover(s1, s2)
-            if s is not None:
-                crossok += 1
-                return s
-            else:
+        for _ in range(10):
+            a, b = self._crossover(s1, s2)
+            if a is None and b is None:
                 crossnok += 1
-        return None
+            else:
+                crossok += 1
+                return a, b
+        return None, None
 
     def _crossover(self, s1: Solution, s2: Solution):
         problem = self.problem
-        warehouse = problem.graph.warehouse
+
         z_j1 = s1.z_j.copy()
         y_k1 = s1.y_k.copy()
 
         z_j2 = s2.z_j.copy()
         y_k2 = s2.y_k.copy()
 
-        x_jv = np.full_like(s1.x_jv, warehouse)
-        y_k = np.full_like(y_k1, -1)
-        z_j = np.full_like(z_j1, -1)
-
-        vehicles_intersection = np.intersect1d(y_k1, y_k2)
-        vehicles_symdiff = np.setdiff1d(
-            np.union1d(y_k1, y_k2), vehicles_intersection, assume_unique=True
+        s1_used_couriers = np.unique(z_j1)
+        s1_used_couriers = s1_used_couriers[s1_used_couriers != -1]
+        s1_unused_couriers = np.setdiff1d(
+            np.arange(problem.n_couriers), s1_used_couriers, assume_unique=True
         )
-        vehicles_remaining = np.setdiff1d(
-            np.arange(self.problem.n_vehicles),
-            np.union1d(y_k1, y_k2),
-            assume_unique=True,
+
+        s2_used_couriers = np.unique(z_j2)
+        s2_used_couriers = s2_used_couriers[s2_used_couriers != -1]
+        s2_unused_couriers = np.setdiff1d(
+            np.arange(problem.n_couriers), s2_used_couriers, assume_unique=True
         )
-        vehicle_arrays = [vehicles_intersection, vehicles_symdiff, vehicles_remaining]
 
-        couriers_intersection = np.intersect1d(z_j1, z_j2, assume_unique=True)
-        couriers_intersection = couriers_intersection[couriers_intersection != -1]
-        couriers_symdiff = np.setdiff1d(
-            np.union1d(z_j1, z_j2), couriers_intersection, assume_unique=True
-        )
-        couriers_symdiff = couriers_symdiff[couriers_symdiff != -1]
-        couriers_remaining = np.setdiff1d(
-            np.arange(self.problem.n_couriers), np.union1d(z_j1, z_j2)
-        )
-        courier_arrays = [couriers_intersection, couriers_symdiff, couriers_remaining]
+        s1_used_vehicles = np.unique(y_k1)
+        s2_used_vehicles = np.unique(y_k2)
 
-        def get_rnd(arr):
-            if not arr[2].size:
-                if not arr[1].size:
-                    return np.random.choice(arr[0])
+        a_x_jv = s1.x_jv.copy()
+        a_y_k = y_k1.copy()
+        a_z_j = np.full_like(z_j1, -1)
 
-                ix = np.random.choice([0, 1], p=[0.7, 0.3])
-                return np.random.choice(arr[ix])
+        b_x_jv = s2.x_jv.copy()
+        b_y_k = y_k2.copy()
+        b_z_j = np.full_like(z_j2, -1)
 
-            ix = np.random.choice([0, 1, 2], p=[0.6, 0.3, 0.1])
-            return np.random.choice(arr[ix])
+        a_set = set()
 
-        capacity = {j: 0 for j in range(problem.n_vehicles)}
+        s2_used_set = set(s2_used_couriers)
+        s2_unused_set = set(s2_unused_couriers)
 
-        for k, p in enumerate(problem.packages):
-            while y_k[k] == -1:
-                j = get_rnd(vehicle_arrays)
-                if capacity[j] + p.weight <= problem.vehicles[j].capacity:
-                    capacity[j] += p.weight
-                    y_k[k] = j
-                    x_jv[j] = calculate_vehicle_route(problem, y_k, j)
+        b_set = set()
 
-        vs = np.hstack([np.random.permutation(arr) for arr in vehicle_arrays])
+        s1_used_set = set(s1_used_couriers)
+        s1_unused_set = set(s1_unused_couriers)
 
-        for j in vs:
-            while z_j[j] == -1:
-                i = get_rnd(courier_arrays)
-                if (i, j) in problem.permissions:
-                    z_j[j] = i
+        for j in np.random.permutation(s1_used_vehicles):
+            # TODO: sprawdzac czy trasa nie jest dluzsza niz czas pracy kuriera
+            for _ in range(2 * len(s2_used_set)):
+                i = np.random.choice(list(s2_used_set))
+                if (i, j) in problem.permissions and i not in a_set:
+                    a_set.add(i)
+                    s2_used_set.remove(i)
+                    a_z_j[j] = i
+                    break
+            else:
+                for _ in range(2 * len(s2_unused_set)):
+                    i = np.random.choice(list(s2_unused_set))
+                    if (i, j) in problem.permissions and i not in a_set:
+                        a_set.add(i)
+                        s2_unused_set.remove(i)
+                        a_z_j[j] = i
+                        break
+                else:
+                    break
 
-        # TODO: problem, trasy są od nowa losowo
+        for j in np.random.permutation(s2_used_vehicles):
+            for _ in range(2 * len(s1_used_set)):
+                i = np.random.choice(list(s1_used_set))
+                if (i, j) in problem.permissions and i not in b_set:
+                    b_set.add(i)
+                    s1_used_set.remove(i)
+                    b_z_j[j] = i
+                    break
+            else:
+                for _ in range(2 * len(s1_unused_set)):
+                    i = np.random.choice(list(s1_unused_set))
+                    if (i, j) in problem.permissions and i not in b_set:
+                        b_set.add(i)
+                        s1_unused_set.remove(i)
+                        b_z_j[j] = i
+                        break
+                else:
+                    break
 
-        s = Solution(problem, x_jv, y_k, z_j)
+        a = Solution(problem, a_x_jv, a_y_k, a_z_j) if -1 not in a_z_j[a_y_k] else None
+        b = Solution(problem, b_x_jv, b_y_k, b_z_j) if -1 not in b_z_j[b_y_k] else None
 
-        return s if self.checker.is_feasible(s) else None
+        if a is not None and not self.checker.is_feasible(a):
+            a = None
+
+        if b is not None and not self.checker.is_feasible(b):
+            b = None
+
+        return a, b
 
     def mutation(self, solution: Solution):
         x_jv = solution.x_jv
@@ -164,11 +186,14 @@ class GA:
         for i in range(1, max_iter + 1):
             solutions.sort(key=lambda s: self.get_cost(s))
 
-            # new = [self.crossover(solutions[i], solutions[j]) for i, j in get_pairs()]
+            new = [self.crossover(solutions[i], solutions[j]) for i, j in get_pairs()]
+            new = [t[0] for t in new] + [t[1] for t in new]
+            new = [n for n in new if n]
+            new = [self.mutation(n) for n in new]
 
             # print("Crossovers", crossok, "/", crossok + crossnok)
             # new = [self.mutation(n) for n in new if n]
-            new = [self.mutation(n) for n in solutions[: l // 2]]
+            # new = [self.mutation(n) for n in solutions[: l // 2]]
             o = 0
             while len(new) < l // 2:
                 new.append(solutions[l // 2 + o])
