@@ -7,7 +7,6 @@ import numpy as np
 from model.problem import Problem
 from model.solution import Solution
 from solution_checker import SolutionChecker
-from utils import calculate_vehicle_route
 
 from .mutations import (
     CouriersMutation,
