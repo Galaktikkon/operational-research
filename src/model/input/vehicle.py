@@ -14,3 +14,16 @@ class Vehicle:
 
     capacity: float
     fuel_consumption: float
+
+    @classmethod
+    def from_dict(cls, dictionary):
+        return cls(
+            dictionary["capacity"],
+            dictionary["fuel_consumption"]
+        )
+    
+    def to_dict(self):
+        return {
+            "capacity": float(self.capacity),
+            "fuel_consumption": float(self.fuel_consumption)
+        }

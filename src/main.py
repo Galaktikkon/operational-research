@@ -12,21 +12,24 @@ def main(
     max_attempts=int(1e6),
     max_iter=10000,
 ):
-    problem = ProblemInitializer(n_couriers, n_vehicles, n_packages).get_problem()
+    initializer = ProblemInitializer()
+    initializer.generate_random(n_couriers, n_vehicles, n_packages)
+    problem = initializer.get_problem()
     print(problem)
+    initializer.save_to_json("problem.json")
 
-    generator = Generator(problem)
-    solutions = generator.generate_many_feasible(num_to_find, max_attempts)
+    # generator = Generator(problem)
+    # solutions = generator.generate_many_feasible(num_to_find, max_attempts)
 
-    ga = GA(problem, solutions)
+    # ga = GA(problem, solutions)
 
-    a, b = ga.run(max_iter=max_iter)
-    print()
-    print(f"BEFORE {ga.get_cost(a)}")
-    print(a)
-    print(f"AFTER {ga.get_cost(b)}")
-    print(b)
+    # a, b = ga.run(max_iter=max_iter)
+    # print()
+    # print(f"BEFORE {ga.get_cost(a)}")
+    # print(a)
+    # print(f"AFTER {ga.get_cost(b)}")
+    # print(b)
 
-    print(f"{ga.get_cost(a):.2f}", f"{ga.get_cost(b):.2f}")
+    # print(f"{ga.get_cost(a):.2f}", f"{ga.get_cost(b):.2f}")
 
-    draw_comparison(a, b)
+    # draw_comparison(a, b)

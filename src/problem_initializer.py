@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 
 from model import Graph
@@ -29,6 +31,13 @@ class ProblemInitializer:
         random_graph(n_nodes: int, max_coord: int = 100) -> Graph:
             Generates a random graph with nodes and edges.
     """
+    
+    def __init__(self):
+        self.couriers = []
+        self.vehicles = []
+        self.permissions = []
+        self.packages = []
+        self.graph = None
 
     def get_problem(self) -> Problem:
         return Problem(
@@ -39,7 +48,45 @@ class ProblemInitializer:
             self.graph,
         )
 
-    def __init__(self, n_couriers, n_vehicles, n_packages):
+    def generate_from_json(self, json_file):
+        with open(json_file, "r") as f:
+            problem_data = json.load(f)
+
+        for courier in problem_data["couriers"]:
+            self.couriers.append(Courier.from_dict(courier))
+
+        for vehicle in problem_data["vehicles"]:
+            self.vehicles.append(Vehicle.from_dict(vehicle))
+        
+        for permission in problem_data["permissions"]:
+            self.permissions.append(
+                (
+                    permission["courier"],
+                    permission["vehicle"]
+                )
+            )
+
+        for package in problem_data["packages"]:
+            self.packages.append(Package.from_dict(package))
+
+        graph = problem_data["graph"]
+        self.graph = Graph.from_dict(graph)
+               
+    def save_to_json(self, path):
+        problem_data = {}
+        problem_data["couriers"] = [courier.to_dict() for courier in self.couriers]
+        problem_data["vehicles"] = [vehicle.to_dict() for vehicle in self.vehicles]
+        problem_data["packages"] = [package.to_dict() for package in self.packages]
+        problem_data["permissions"] = [
+            { "courier": courier, "vehicle": vehicle }
+            for courier, vehicle in self.permissions
+        ]
+        problem_data["graph"] = self.graph.to_dict()
+        print(problem_data)
+        with open(path, "w") as f:
+            json.dump(problem_data, f, indent=2)
+
+    def generate_random(self, n_couriers, n_vehicles, n_packages):
         self.couriers = [self.random_courier() for _ in range(n_couriers)]
 
         self.vehicles = [self.random_vehicle() for _ in range(n_vehicles)]
