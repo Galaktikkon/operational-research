@@ -82,7 +82,6 @@ class ProblemInitializer:
             for courier, vehicle in self.permissions
         ]
         problem_data["graph"] = self.graph.to_dict()
-        print(problem_data)
         with open(path, "w") as f:
             json.dump(problem_data, f, indent=2)
 

@@ -3,16 +3,13 @@
 ScreenManagement:
     ProblemInputScreen:
         name: "problem_input"
-    JSONLoaderScreen:
-        name: "json_loader"
+    ProblemLoaderScreen:
+        name: "problem_loader"
 
 <ProblemInputScreen>:
     couriers: couriers_id
     vehicles: vehicles_id
     packages: packages_id
-    solutions: solutions_id
-    attempts: attempts_id
-    iterations: iterations_id
     json_path: json_path_id
 
     GridLayout:
@@ -35,6 +32,14 @@ ScreenManagement:
             spacing: 12
             row_default_height: 40
             row_force_default: True
+
+            Label:
+                text: "JSON file path:"
+                font_size: '16sp'
+            TextInput:
+                id: json_path_id
+                multiline: False
+                hint_text: "/path/to/output.json"
 
             Label:
                 text: "Couriers:"
@@ -60,6 +65,64 @@ ScreenManagement:
                 multiline: False
                 hint_text: "e.g. 20"
 
+        BoxLayout:
+            size_hint_y: None
+            height: 50
+            spacing: 20
+
+            Button:
+                text: "Generate"
+                font_size: '18sp'
+                background_color: (0.2, 0.6, 0.9, 1)
+                color: (1, 1, 1, 1)
+                background_normal: ''
+                border: (12, 12, 12, 12)
+                on_press: root.generate()
+
+            Button:
+                text: "Go to the loader"
+                font_size: '18sp'
+                background_color: (0.1, 0.5, 0.3, 1)
+                color: (1, 1, 1, 1)
+                background_normal: ''
+                border: (12, 12, 12, 12)
+                on_press: app.root.current = "problem_loader"
+
+<ProblemLoaderScreen>:
+    json_path: json_path_input
+    solutions: solutions_id
+    attempts: attempts_id
+    iterations: iterations_id
+
+    GridLayout:
+        cols: 1
+        padding: 30
+        spacing: 20
+
+        Label:
+            text: "Problem Loader"
+            font_size: '28sp'
+            bold: True
+            size_hint_y: None
+            height: 50
+            halign: 'center'
+            valign: 'middle'
+            text_size: self.size
+
+        GridLayout:
+            cols: 2
+            spacing: 12
+            row_default_height: 40
+            row_force_default: True
+
+            Label:
+                text: "JSON file path:"
+                font_size: '16sp'
+            TextInput:
+                id: json_path_input
+                multiline: False
+                hint_text: "/path/to/input.json"
+
             Label:
                 text: "Solutions:"
                 font_size: '16sp'
@@ -84,93 +147,26 @@ ScreenManagement:
                 multiline: False
                 hint_text: "e.g. 500"
 
-            Label:
-                text: "JSON file path:"
-                font_size: '16sp'
-            TextInput:
-                id: json_path_id
-                multiline: False
-                hint_text: "/path/to/output.json"
-
         BoxLayout:
             size_hint_y: None
             height: 50
             spacing: 20
 
             Button:
-                text: "Generate"
+                text: "Back to Generator"
                 font_size: '18sp'
-                background_color: (0.2, 0.6, 0.9, 1)
+                background_color: (0.6, 0.6, 0.6, 1)
                 color: (1, 1, 1, 1)
                 background_normal: ''
                 border: (12, 12, 12, 12)
-                on_press: root.generate()
+                on_press: app.root.current = "problem_input"
 
             Button:
-                text: "Go to the loader"
+                text: "Run"
                 font_size: '18sp'
-                background_color: (0.1, 0.5, 0.3, 1)
-                color: (1, 1, 1, 1)
-                background_normal: ''
-                border: (12, 12, 12, 12)
-                on_press: app.root.current = "json_loader"
-
-<JSONLoaderScreen>:
-    json_path: json_path_input
-
-    BoxLayout:
-        orientation: 'vertical'
-        padding: 30
-        spacing: 20
-
-        Label:
-            text: "JSON Loader"
-            font_size: '28sp'
-            size_hint_y: None
-            height: 50
-            halign: 'center'
-            valign: 'middle'
-            text_size: self.size
-
-        BoxLayout:
-            spacing: 10
-            size_hint_y: None
-            height: 40
-
-            TextInput:
-                id: json_path_input
-                hint_text: "Enter JSON file path..."
-                multiline: False
-
-            Button:
-                text: "Load"
-                size_hint_x: None
-                width: 100
-                font_size: '16sp'
                 background_color: (0.1, 0.5, 0.9, 1)
                 color: (1, 1, 1, 1)
                 background_normal: ''
                 border: (12, 12, 12, 12)
-                on_press: root.load_json_data()
+                on_press: root.run_problem()
 
-        ScrollView:
-            do_scroll_x: False
-
-            Label:
-                text: root.json_content
-                text_size: self.width, None
-                size_hint_y: None
-                height: self.texture_size[1]
-                font_size: "14sp"
-                color: (0.2, 0.2, 0.2, 1)
-
-        Button:
-            text: "⬅ Back to Generator"
-            font_size: '16sp'
-            size_hint_y: None
-            height: 40
-            background_color: (0.6, 0.6, 0.6, 1)
-            color: (1, 1, 1, 1)
-            background_normal: ''
-            border: (12, 12, 12, 12)
-            on_press: app.root.current = "problem_input"

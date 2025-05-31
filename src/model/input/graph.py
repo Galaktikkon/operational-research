@@ -66,22 +66,28 @@ class Graph:
         points = []
         for point in dictionary["points"]:
             points.append(
-                point["x"],
-                point["y"]
+                (
+                    point["x"],
+                    point["y"]
+                )
             )
+        points = np.array(points)
         
         routes = []
         for route in dictionary["routes"]:
             routes.append(
-                route["start_node"],
-                route["end_node"],
-                route["distance"],
-                route["time"]
+                (
+                    route["start_node"],
+                    route["end_node"],
+                    route["distance"],
+                    route["time"]
+                )
             )
+        print(routes)
         
         warehouse = dictionary["warehouse"]
             
-        return cls(points, routes, warehouse, True)
+        return cls(routes, points, warehouse, True)
     
     def to_dict(self):
         points = [
