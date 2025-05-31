@@ -1,0 +1,55 @@
+<MainGrid>
+
+    couriers: couriers_id
+    vehicles: vehicles_id
+    packages: packages_id
+    solutions: solutions_id
+    attempts: attempts_id
+    iterations: iterations_id
+
+    GridLayout:
+        cols: 1
+        size: root.width, root.height
+        
+        GridLayout:
+            cols: 2
+
+            Label:
+                text: "Couriers:"
+            TextInput:
+                id: couriers_id
+                multiline: False
+            
+            Label:
+                text: "Vehicles:"
+            TextInput:
+                id: vehicles_id
+                multiline: False
+            
+            Label:
+                text: "Packages:"
+            TextInput:
+                id: packages_id
+                multiline: False
+            
+            Label:
+                text: "Solutions to find:"
+            TextInput:
+                id: solutions_id
+                multiline: False
+
+            Label:
+                text: "Max attempts:"
+            TextInput:
+                id: attempts_id
+                multiline: False
+
+            Label:
+                text: "Max iterations:"
+            TextInput:
+                id: iterations_id
+                multiline: False
+        
+        Button:
+            text: "Generate"
+            on_press: root.generate()
