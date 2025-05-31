@@ -73,7 +73,7 @@ ScreenManagement:
             Button:
                 text: "Generate"
                 font_size: '18sp'
-                background_color: (0.2, 0.6, 0.9, 1)
+                background_color: (0.1, 0.5, 0.9, 1)
                 color: (1, 1, 1, 1)
                 background_normal: ''
                 border: (12, 12, 12, 12)
@@ -89,7 +89,7 @@ ScreenManagement:
                 on_press: app.root.current = "problem_loader"
 
 <ProblemLoaderScreen>:
-    json_path: json_path_input
+    json_path: json_path_id
     solutions: solutions_id
     attempts: attempts_id
     iterations: iterations_id
@@ -119,7 +119,7 @@ ScreenManagement:
                 text: "JSON file path:"
                 font_size: '16sp'
             TextInput:
-                id: json_path_input
+                id: json_path_id
                 multiline: False
                 hint_text: "/path/to/input.json"
 
@@ -170,3 +170,26 @@ ScreenManagement:
                 border: (12, 12, 12, 12)
                 on_press: root.run_problem()
 
+<InfoPopup@Popup>:
+    title: "Error"
+    size_hint: None, None
+    size: 400, 200
+    auto_dismiss: False
+
+    BoxLayout:
+        orientation: 'vertical'
+        spacing: 10
+        padding: 10
+
+        Label:
+            id: message_label
+            text: "Default error message"
+            text_size: self.width, None
+            halign: 'center'
+            valign: 'middle'
+
+        Button:
+            text: "Close"
+            size_hint_y: None
+            height: '40dp'
+            on_release: root.dismiss()
