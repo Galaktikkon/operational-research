@@ -1,12 +1,6 @@
 #:import rgba kivy.utils.get_color_from_hex
 
-ScreenManagement:
-    ProblemInputScreen:
-        name: "problem_input"
-    ProblemLoaderScreen:
-        name: "problem_loader"
-
-<ProblemInputScreen>:
+<InputScreen>:
     couriers: couriers_id
     vehicles: vehicles_id
     packages: packages_id
@@ -92,7 +86,7 @@ ScreenManagement:
                 border: (12, 12, 12, 12)
                 on_press: app.root.current = "problem_loader"
 
-<ProblemLoaderScreen>:
+<LoaderScreen>:
     json_path: json_path_id
     solutions: solutions_id
     attempts: attempts_id
@@ -178,7 +172,7 @@ ScreenManagement:
                 border: (12, 12, 12, 12)
                 on_press: root.run_problem()
                 
-<GAAnimationScreen>:
+<AnimationScreen>:
     BoxLayout:
         id: plot_box
         orientation: 'vertical'
