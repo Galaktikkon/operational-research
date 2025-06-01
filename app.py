@@ -6,12 +6,13 @@ from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.factory import Factory
 from kivy.properties import ObjectProperty
 
+import matplotlib.pyplot as plt
 
 sys.path.insert(0, os.path.abspath("src"))
 from src.problem_initializer import ProblemInitializer
 from src.generator import Generator
 from src.ga import GA
-from src.ui import draw_comparison
+from src.ui import draw_solution_to_axis
 
 
 class LoadedProblem:
@@ -115,12 +116,29 @@ if __name__ == "__main__":
 
         ga = GA(loaded_problem.problem, solutions)
 
-        a, b = ga.run(max_iter=loaded_problem.iterations_num)
-        print()
-        print(f"BEFORE {ga.get_cost(a)}")
-        print(a)
-        print(f"AFTER {ga.get_cost(b)}")
-        print(b)
+        initial_best = None
+        current_best = None        
 
-        print(f"{ga.get_cost(a):.2f}", f"{ga.get_cost(b):.2f}")
-        draw_comparison(a, b)
+        plt.ion()
+        fig, axes = plt.subplots(1, 3, figsize=(24, 7))
+        plt.show()
+        for solution in ga.run(max_iter=loaded_problem.iterations_num):
+            # print(solution)
+            if initial_best is None:
+                initial_best = solution
+            if current_best is None or ga.get_cost(solution) < ga.get_cost(current_best):
+                current_best = solution
+            for axis in axes:
+                axis.clear()
+            draw_solution_to_axis(initial_best, axes[0])
+            axes[0].set(title=f"Initial solution, cost={ga.get_cost(initial_best):.2f}")
+            draw_solution_to_axis(solution, axes[1])
+            axes[1].set(title=f"Current solution, cost={ga.get_cost(solution):.2f}") 
+            draw_solution_to_axis(current_best, axes[2])
+            axes[2].set(title=f"Best solution, cost={ga.get_cost(current_best):.2f}")
+
+            fig.canvas.draw()
+            fig.canvas.flush_events()
+            plt.pause(0.001)   
+        plt.ioff()
+        plt.show()
