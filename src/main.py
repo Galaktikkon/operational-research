@@ -12,8 +12,11 @@ def main(
     max_attempts=int(1e6),
     max_iter=10000,
 ):
-    problem = ProblemInitializer(n_couriers, n_vehicles, n_packages).get_problem()
+    initializer = ProblemInitializer()
+    initializer.generate_random(n_couriers, n_vehicles, n_packages)
+    problem = initializer.get_problem()
     print(problem)
+    initializer.save_to_json("problem.json")
 
     generator = Generator(problem)
     solutions = generator.generate_many_feasible(num_to_find, max_attempts)

@@ -247,6 +247,7 @@ class GA:
 
         return solution
 
+
     def run(self, max_iter=1000):
         """Run the genetic algorithm to optimize the solution.
         This method initializes the population, performs crossover and mutation operations,
@@ -265,6 +266,7 @@ class GA:
 
         solutions.sort(key=lambda s: self.get_cost(s))
         initial_best = deepcopy(solutions[0])
+        yield initial_best
 
         pairs = [(i, j) for i in range(l // 2) for j in range(i + 1, l // 2)]
 
@@ -274,7 +276,7 @@ class GA:
 
         for i in range(1, max_iter + 1):
             solutions.sort(key=lambda s: self.get_cost(s))
-
+            yield deepcopy(solutions[0])
             new = [self.crossover(solutions[i], solutions[j]) for i, j in get_pairs()]
             new = [t[0] for t in new] + [t[1] for t in new]
             new = [n for n in new if n]
@@ -293,6 +295,7 @@ class GA:
             sys.stdout.write("\r" + " " * 80 + "\r" + str(i))
             sys.stdout.flush()
 
+
         solutions.sort(key=lambda s: self.get_cost(s))
         print()
 
@@ -310,4 +313,4 @@ class GA:
         for m in mutations:
             print(m.__name__, m.times_feasible_created, "/", m.times_run)
 
-        return initial_best, solutions[0]
+        yield solutions[0]
