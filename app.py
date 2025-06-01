@@ -5,6 +5,9 @@ from kivy.app import App
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.factory import Factory
 from kivy.properties import ObjectProperty
+from kivy.uix.boxlayout import BoxLayout
+from kivy.clock import Clock
+from kivy_garden.matplotlib.backend_kivyagg import FigureCanvasKivyAgg
 
 import matplotlib.pyplot as plt
 
@@ -22,7 +25,6 @@ class LoadedProblem:
         self.attempts_num = attempts_num
         self.iterations_num = iterations_num
 
-loaded_problem = None
 
 class ValidationError(Exception):
     pass
@@ -37,11 +39,13 @@ def get_number(text):
         raise ValidationError(f"Number '{number}' should be positive")
     return number
 
+
 def create_popup(title, message):
     popup = Factory.InfoPopup()
     popup.title = title
     popup.ids.message_label.text = message
     popup.open()
+
 
 class ProblemInputScreen(Screen):
     couriers = ObjectProperty(None)
@@ -57,15 +61,17 @@ class ProblemInputScreen(Screen):
         except ValidationError as e:
             create_popup("Error", str(e))
             return
+
         initializer = ProblemInitializer()
         initializer.generate_random(couriers_num, vehicles_num, packages_num)
         try:
             initializer.save_to_json(self.json_path.text)
-        except (PermissionError, OSError) as e:
+        except (PermissionError, OSError):
             create_popup("Error", f"Couldn't save the problem to {self.json_path.text}")
             return
+
         create_popup("Done", f"Saved the problem to {self.json_path.text}")
-    
+
 
 class ProblemLoaderScreen(Screen):
     json_path = ObjectProperty(None)
@@ -74,13 +80,13 @@ class ProblemLoaderScreen(Screen):
     iterations = ObjectProperty(None)
 
     def run_problem(self):
-        global loaded_problem
         initializer = ProblemInitializer()
         try:
             initializer.generate_from_json(self.json_path.text)
-        except (FileNotFoundError, PermissionError) as e:
+        except (FileNotFoundError, PermissionError):
             create_popup("Error", f"Couldn't load file '{self.json_path.text}'")
             return
+
         try:
             solutions_num = get_number(self.solutions.text)
             attempts_num = get_number(self.attempts.text)
@@ -88,57 +94,79 @@ class ProblemLoaderScreen(Screen):
         except ValidationError as e:
             create_popup("Error", str(e))
             return
+
         problem = initializer.get_problem()
-        loaded_problem = LoadedProblem(problem, solutions_num, attempts_num, iterations_num)
-        self.get_root_window().close()
+        app = App.get_running_app()
+        app.loaded_problem = LoadedProblem(problem, solutions_num, attempts_num, iterations_num)
+
+        self.manager.current = "animation"
+
+
+class GAAnimationScreen(Screen):
+    def on_enter(self):
+        app = App.get_running_app()
+        loaded_problem = app.loaded_problem
+
+        self.generator = Generator(loaded_problem.problem)
+        self.solutions = self.generator.generate_many_feasible(
+            loaded_problem.solutions_num,
+            loaded_problem.attempts_num
+        )
+        self.ga = GA(loaded_problem.problem, self.solutions)
+        self.ga_iterator = self.ga.run(max_iter=loaded_problem.iterations_num)
+        self.initial_best = None
+        self.current_best = None
+
+        self.fig, self.axes = plt.subplots(1, 3, figsize=(12, 4))
+        self.canvas = FigureCanvasKivyAgg(self.fig)
+
+        plot_box = self.ids.plot_box
+        plot_box.clear_widgets()
+        plot_box.add_widget(self.canvas)
+
+        Clock.schedule_interval(self.update_plot, 0.2)
+
+    def update_plot(self, dt):
+        try:
+            solution = next(self.ga_iterator)
+        except StopIteration:
+            Clock.unschedule(self.update_plot)
+            return
+
+        if self.initial_best is None:
+            self.initial_best = solution
+        if self.current_best is None or self.ga.get_cost(solution) < self.ga.get_cost(self.current_best):
+            self.current_best = solution
+
+        for axis in self.axes:
+            axis.clear()
+
+        draw_solution_to_axis(self.initial_best, self.axes[0])
+        self.axes[0].set(title=f"Initial, cost={self.ga.get_cost(self.initial_best):.2f}")
+
+        draw_solution_to_axis(solution, self.axes[1])
+        self.axes[1].set(title=f"Current, cost={self.ga.get_cost(solution):.2f}")
+
+        draw_solution_to_axis(self.current_best, self.axes[2])
+        self.axes[2].set(title=f"Best, cost={self.ga.get_cost(self.current_best):.2f}")
+
+        self.canvas.draw()
+
 
 class ScreenManagement(ScreenManager):
     pass
 
+
 class OptimizerApp(App):
+    loaded_problem = None
+
     def build(self):
         management = ScreenManagement()
         management.add_widget(ProblemInputScreen(name="problem_input"))
         management.add_widget(ProblemLoaderScreen(name="problem_loader"))
+        management.add_widget(GAAnimationScreen(name="animation"))
         return management
 
 
 if __name__ == "__main__":
-    app = OptimizerApp()
-    app.run()
-
-    if loaded_problem is not None:
-
-        generator = Generator(loaded_problem.problem)
-
-        solutions = generator.generate_many_feasible(loaded_problem.solutions_num,
-                                                     loaded_problem.attempts_num)
-
-        ga = GA(loaded_problem.problem, solutions)
-
-        initial_best = None
-        current_best = None        
-
-        plt.ion()
-        fig, axes = plt.subplots(1, 3, figsize=(24, 7))
-        plt.show()
-        for solution in ga.run(max_iter=loaded_problem.iterations_num):
-            # print(solution)
-            if initial_best is None:
-                initial_best = solution
-            if current_best is None or ga.get_cost(solution) < ga.get_cost(current_best):
-                current_best = solution
-            for axis in axes:
-                axis.clear()
-            draw_solution_to_axis(initial_best, axes[0])
-            axes[0].set(title=f"Initial solution, cost={ga.get_cost(initial_best):.2f}")
-            draw_solution_to_axis(solution, axes[1])
-            axes[1].set(title=f"Current solution, cost={ga.get_cost(solution):.2f}") 
-            draw_solution_to_axis(current_best, axes[2])
-            axes[2].set(title=f"Best solution, cost={ga.get_cost(current_best):.2f}")
-
-            fig.canvas.draw()
-            fig.canvas.flush_events()
-            plt.pause(0.001)   
-        plt.ioff()
-        plt.show()
+    OptimizerApp().run()
