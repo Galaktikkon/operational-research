@@ -11,7 +11,17 @@ sys.path.insert(0, os.path.abspath("src"))
 from src.problem_initializer import ProblemInitializer
 from src.generator import Generator
 from src.ga import GA
+from src.ui import draw_comparison
 
+
+class LoadedProblem:
+    def __init__(self, problem, solutions_num, attempts_num, iterations_num):
+        self.problem = problem
+        self.solutions_num = solutions_num
+        self.attempts_num = attempts_num
+        self.iterations_num = iterations_num
+
+loaded_problem = None
 
 class ValidationError(Exception):
     pass
@@ -63,6 +73,7 @@ class ProblemLoaderScreen(Screen):
     iterations = ObjectProperty(None)
 
     def run_problem(self):
+        global loaded_problem
         initializer = ProblemInitializer()
         try:
             initializer.generate_from_json(self.json_path.text)
@@ -77,22 +88,8 @@ class ProblemLoaderScreen(Screen):
             create_popup("Error", str(e))
             return
         problem = initializer.get_problem()
-        generator = Generator(problem)
-        solutions = generator.generate_many_feasible(solutions_num, attempts_num)
-
-        ga = GA(problem, solutions)
-
-        a, b = ga.run(max_iter=iterations_num)
-        print()
-        print(f"BEFORE {ga.get_cost(a)}")
-        print(a)
-        print(f"AFTER {ga.get_cost(b)}")
-        print(b)
-
-        print(f"{ga.get_cost(a):.2f}", f"{ga.get_cost(b):.2f}")
-        create_popup("Done", "Found a solution for problem")
-        # draw_comparison(a, b)
-
+        loaded_problem = LoadedProblem(problem, solutions_num, attempts_num, iterations_num)
+        self.get_root_window().close()
 
 class ScreenManagement(ScreenManager):
     pass
@@ -106,4 +103,24 @@ class OptimizerApp(App):
 
 
 if __name__ == "__main__":
-    OptimizerApp().run()
+    app = OptimizerApp()
+    app.run()
+
+    if loaded_problem is not None:
+
+        generator = Generator(loaded_problem.problem)
+
+        solutions = generator.generate_many_feasible(loaded_problem.solutions_num,
+                                                     loaded_problem.attempts_num)
+
+        ga = GA(loaded_problem.problem, solutions)
+
+        a, b = ga.run(max_iter=loaded_problem.iterations_num)
+        print()
+        print(f"BEFORE {ga.get_cost(a)}")
+        print(a)
+        print(f"AFTER {ga.get_cost(b)}")
+        print(b)
+
+        print(f"{ga.get_cost(a):.2f}", f"{ga.get_cost(b):.2f}")
+        draw_comparison(a, b)
