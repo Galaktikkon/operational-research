@@ -89,7 +89,6 @@ class AnimationScreen(Screen):
 
         content_first = [
             f"Iterations: {app.iterations}/{loaded_problem.iterations_num}",
-            f"Max Attempts: {loaded_problem.attempts_num}",
             f"Solutions: {loaded_problem.solutions_num}",
             f"Improvements: {app.improvements}"
         ]
