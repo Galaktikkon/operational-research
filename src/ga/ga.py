@@ -17,6 +17,8 @@ from .mutations import (
     UsedVehiclesMutation,
 )
 
+from src.ga.ga_state import GAState
+
 crossok = 0
 crossnok = 0
 
@@ -186,7 +188,7 @@ class GA:
 
         solutions.sort(key=lambda s: self.get_cost(s))
         initial_best = deepcopy(solutions[0])
-        yield initial_best
+        yield GAState(initial_best, crossok, crossok + crossnok)
 
         pairs = [(i, j) for i in range(l // 2) for j in range(i + 1, l // 2)]
 
@@ -196,7 +198,7 @@ class GA:
 
         for i in range(1, max_iter + 1):
             solutions.sort(key=lambda s: self.get_cost(s))
-            yield deepcopy(solutions[0])
+            yield GAState(deepcopy(solutions[0]), crossok, crossok + crossnok)
             new = [self.crossover(solutions[i], solutions[j]) for i, j in get_pairs()]
             new = [t[0] for t in new] + [t[1] for t in new]
             new = [n for n in new if n]
@@ -212,25 +214,7 @@ class GA:
 
             solutions = solutions[: l // 2] + new
 
-            sys.stdout.write("\r" + " " * 80 + "\r" + str(i))
-            sys.stdout.flush()
-
 
         solutions.sort(key=lambda s: self.get_cost(s))
-        print()
 
-        print("Crossovers", crossok, "/", crossok + crossnok)
-
-        mutations = [
-            CouriersMutation,
-            PackagesMutation,
-            UsedVehiclesMutation,
-            UnusedVehiclesMutation,
-            RouteMutation,
-        ]
-
-        m: Mutation
-        for m in mutations:
-            print(m.__name__, m.times_feasible_created, "/", m.times_run)
-
-        yield solutions[0]
+        yield GAState(deepcopy(solutions[0]), crossok, crossok + crossnok)        

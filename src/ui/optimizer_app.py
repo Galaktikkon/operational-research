@@ -3,6 +3,7 @@ import os
 from kivy.uix.screenmanager import ScreenManager
 from kivy.app import App
 from kivy.lang.builder import Builder
+from kivy.core.window import Window
 
 from src.ui.input_screen import InputScreen
 from src.ui.loader_screen import LoaderScreen
@@ -11,8 +12,11 @@ from src.ui.animation_screen import AnimationScreen
 
 class OptimizerApp(App):
     loaded_problem = None
+    iterations = -1
+    improvements = 0
 
     def build(self):
+        Window.maximize()
         Builder.load_file(os.path.join(os.path.dirname(__file__), "optimizer.kv"))
         management = ScreenManager()
         management.add_widget(InputScreen(name="problem_input"))
