@@ -78,6 +78,7 @@ class Generator:
         self,
         num_to_find=int(1e6),
         max_attempts=int(1e6),
+        verbose=True,
     ) -> list[Solution]:
         feasible_solutions = set()
         attempts = 0
@@ -85,20 +86,22 @@ class Generator:
         while len(feasible_solutions) < num_to_find and attempts < max_attempts:
             attempts += 1
 
-            sys.stdout.write(
-                f"\rAttempts: {attempts}/{max_attempts} | Solutions found: {len(feasible_solutions)}"
-            )
-            sys.stdout.flush()
+            if verbose:
+                sys.stdout.write(
+                    f"\rAttempts: {attempts}/{max_attempts} | Solutions found: {len(feasible_solutions)}"
+                )
+                sys.stdout.flush()
 
             candidate = self.generate_solution()
             if candidate and self.checker.is_feasible(candidate):
                 if candidate not in feasible_solutions:
                     feasible_solutions.add(candidate)
 
-        sys.stdout.write(
-            f"\rAttempts: {attempts}/{max_attempts} | Solutions found: {len(feasible_solutions)}"
-        )
-        sys.stdout.flush()
-        print()
+        if verbose:
+            sys.stdout.write(
+                f"\rAttempts: {attempts}/{max_attempts} | Solutions found: {len(feasible_solutions)}"
+            )
+            sys.stdout.flush()
+            print()
 
         return list(feasible_solutions)

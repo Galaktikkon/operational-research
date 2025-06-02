@@ -5,9 +5,22 @@ from .mutation import Mutation
 
 class CouriersMutation(Mutation):
     def _is_possible(self):
+        """
+        Check if the mutation is possible.
+        This mutation is possible if there are at least two couriers available.
+
+        Returns:
+            bool: True if the mutation can be applied, False otherwise.
+        """
         return self.problem.n_couriers >= 2
 
     def _mutate_solution(self):
+        """
+        Swap the couriers of two drivers.
+        This mutation randomly selects two drivers and swaps their assigned couriers.
+        It ensures that the two selected drivers are not the same and that the
+        selected drivers have at least one courier assigned to them.
+        """
         z_j = self.solution.z_j
 
         drivers = np.unique(z_j)
@@ -28,6 +41,11 @@ class CouriersMutation(Mutation):
             z_j[j2] = self.i1
 
     def _reverse(self):
+        """
+        Reverse the mutation by swapping the couriers back to their original drivers.
+        This method restores the original assignments of couriers to drivers
+        after the mutation has been applied.
+        """
         self.solution.z_j[self.j1] = self.i1
         if self.j2 is not None:
             self.solution.z_j[self.j2] = self.i2
