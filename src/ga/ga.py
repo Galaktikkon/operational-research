@@ -11,6 +11,10 @@ from solution_checker import SolutionChecker
 from .mutations import (
     Mutation,
     RouteMutation,
+    UnusedVehiclesMutation,
+    UsedVehiclesMutation,
+    PackagesMutation,
+    CouriersMutation,
 )
 
 from src.ga.ga_state import GAState
@@ -45,7 +49,13 @@ class GA:
         self,
         problem: Problem,
         initial_population: list[Solution],
-        mutations: list[Mutation] = [],
+        mutations: list[Mutation] = [
+            CouriersMutation,
+            UsedVehiclesMutation,
+            UnusedVehiclesMutation,
+            PackagesMutation,
+            RouteMutation,
+        ],
     ):
         self.initial_population = initial_population
         self.mutations = mutations
@@ -304,7 +314,6 @@ class GA:
 
             solutions = solutions[: l // 2] + new
 
-
         solutions.sort(key=lambda s: self.get_cost(s))
 
-        yield GAState(deepcopy(solutions[0]), crossok, crossok + crossnok)        
+        yield GAState(deepcopy(solutions[0]), crossok, crossok + crossnok)

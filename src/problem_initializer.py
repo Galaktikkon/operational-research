@@ -31,7 +31,7 @@ class ProblemInitializer:
         random_graph(n_nodes: int, max_coord: int = 100) -> Graph:
             Generates a random graph with nodes and edges.
     """
-    
+
     def __init__(self):
         self.couriers = []
         self.vehicles = []
@@ -57,28 +57,23 @@ class ProblemInitializer:
 
         for vehicle in problem_data["vehicles"]:
             self.vehicles.append(Vehicle.from_dict(vehicle))
-        
+
         for permission in problem_data["permissions"]:
-            self.permissions.append(
-                (
-                    permission["courier"],
-                    permission["vehicle"]
-                )
-            )
+            self.permissions.append((permission["courier"], permission["vehicle"]))
 
         for package in problem_data["packages"]:
             self.packages.append(Package.from_dict(package))
 
         graph = problem_data["graph"]
         self.graph = Graph.from_dict(graph)
-               
+
     def save_to_json(self, path):
         problem_data = {}
         problem_data["couriers"] = [courier.to_dict() for courier in self.couriers]
         problem_data["vehicles"] = [vehicle.to_dict() for vehicle in self.vehicles]
         problem_data["packages"] = [package.to_dict() for package in self.packages]
         problem_data["permissions"] = [
-            { "courier": courier, "vehicle": vehicle }
+            {"courier": courier, "vehicle": vehicle}
             for courier, vehicle in self.permissions
         ]
         problem_data["graph"] = self.graph.to_dict()
