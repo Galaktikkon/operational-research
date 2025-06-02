@@ -31,14 +31,14 @@ class Package:
             dictionary["weight"],
             dictionary["start_time"],
             dictionary["end_time"],
-            dictionary["type"]
+            dictionary["type"],
         )
-    
+
     def to_dict(self):
         return {
             "address": int(self.address),
             "weight": float(self.weight),
             "start_time": float(self.start_time),
             "end_time": float(self.end_time),
-            "type": self.type
+            "type": self.type,
         }

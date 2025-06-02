@@ -17,13 +17,10 @@ class Courier:
 
     @classmethod
     def from_dict(cls, dictionary):
-        return cls(
-            dictionary["hourly_rate"],
-            dictionary["work_limit"]
-        )
-    
+        return cls(dictionary["hourly_rate"], dictionary["work_limit"])
+
     def to_dict(self):
         return {
             "hourly_rate": float(self.hourly_rate),
-            "work_limit": float(self.work_limit)
+            "work_limit": float(self.work_limit),
         }

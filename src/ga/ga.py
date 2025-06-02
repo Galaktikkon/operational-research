@@ -9,12 +9,8 @@ from model.solution import Solution
 from solution_checker import SolutionChecker
 
 from .mutations import (
-    CouriersMutation,
     Mutation,
-    PackagesMutation,
     RouteMutation,
-    UnusedVehiclesMutation,
-    UsedVehiclesMutation,
 )
 
 crossok = 0
@@ -43,12 +39,21 @@ class GA:
             Execute the genetic algorithm to optimize the solution over a specified number of iterations.
     """
 
-    def __init__(self, problem: Problem, initial_population: list[Solution]):
+    def __init__(
+        self,
+        problem: Problem,
+        initial_population: list[Solution],
+        mutations: list[Mutation] = [],
+    ):
+        self.initial_population = initial_population
+        self.mutations = mutations
         self.problem = problem
         self.checker = SolutionChecker(problem)
+
         self.C = 1
         self.alpha = 0
-        self.initial_population = initial_population
+
+        self._cost_function_runs = 0
 
     @functools.cache
     def get_cost(self, solution: Solution):
@@ -70,6 +75,8 @@ class GA:
         rates = solution.get_t_i() @ c_i
         fuel_cost = self.C * (p_j @ solution.get_d_j())
         delay = self.alpha / self.problem.n_packages * np.sum(solution.get_v_k() - a_k)
+
+        self._cost_function_runs += 1
 
         return rates + fuel_cost + delay
 
@@ -207,7 +214,7 @@ class GA:
         return a, b
 
     def mutation(self, solution: Solution):
-        """Perform mutation on a solution.
+        """Perform mutations on a solution.
         This method applies various mutation strategies to the given solution.
         Args:
             solution (Solution): The solution to mutate.
@@ -221,17 +228,21 @@ class GA:
         solution = Solution(solution.problem, x_jv.copy(), y_k.copy(), z_j.copy())
         original = Solution(solution.problem, x_jv.copy(), y_k.copy(), z_j.copy())
 
-        mutations = [
-            CouriersMutation(solution),
-            PackagesMutation(solution),
-            UsedVehiclesMutation(solution),
-            UnusedVehiclesMutation(solution),
-        ] + [RouteMutation(solution, j) for j in np.random.permutation(np.unique(y_k))]
+        available_mutations = []
 
-        mutation_order = np.random.permutation(np.arange(len(mutations)))
+        for mutation_class in self.mutations:
+            if mutation_class is not RouteMutation:
+                available_mutations += [mutation_class(solution)]
+            else:
+                available_mutations += [
+                    mutation_class(solution, j)
+                    for j in np.random.permutation(np.unique(y_k))
+                ]
+
+        mutation_order = np.random.permutation(np.arange(len(available_mutations)))
 
         for m in mutation_order:
-            mutation: Mutation = mutations[m]
+            mutation: Mutation = available_mutations[m]
 
             if not mutation.is_possible():
                 continue
@@ -247,8 +258,7 @@ class GA:
 
         return solution
 
-
-    def run(self, max_iter=1000):
+    def run(self, max_iter=1000, verbose=True):
         """Run the genetic algorithm to optimize the solution.
         This method initializes the population, performs crossover and mutation operations,
         and iteratively improves the solutions until the maximum number of iterations is reached.
@@ -292,25 +302,10 @@ class GA:
 
             solutions = solutions[: l // 2] + new
 
-            sys.stdout.write("\r" + " " * 80 + "\r" + str(i))
-            sys.stdout.flush()
-
+            if verbose:
+                sys.stdout.write("\r" + " " * 80 + "\r" + str(i))
+                sys.stdout.flush()
 
         solutions.sort(key=lambda s: self.get_cost(s))
-        print()
-
-        print("Crossovers", crossok, "/", crossok + crossnok)
-
-        mutations = [
-            CouriersMutation,
-            PackagesMutation,
-            UsedVehiclesMutation,
-            UnusedVehiclesMutation,
-            RouteMutation,
-        ]
-
-        m: Mutation
-        for m in mutations:
-            print(m.__name__, m.times_feasible_created, "/", m.times_run)
 
         yield solutions[0]
