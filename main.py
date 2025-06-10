@@ -128,7 +128,7 @@ class AnimationPopup(tk.Toplevel):
 
         content_first = [
             f"Iterations: {self.iteration}/{self.sim_params['iterations_num']}",
-            f"Solutions: {self.sim_params['solutions_num']}",
+            f"Solutions' population: {self.sim_params['solutions_num']}",
             f"Improvements: {self.improvements}",
             f"Best solution found in: {self.best_found_iteration}"
         ]
