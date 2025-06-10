@@ -52,6 +52,7 @@ class AnimationPopup(tk.Toplevel):
         self.iteration = 0
         self.improvements = 0
         self.sim_params = sim_params
+        self.best_found_iteration = None
 
         # Start animation: call self.update_plot every 200 ms
         self.anim = FuncAnimation(self.fig, self.update_plot, interval=200)
@@ -106,12 +107,12 @@ class AnimationPopup(tk.Toplevel):
 
         if self.initial_best is None:
             self.initial_best = state.solution
-        if (
-            self.current_best is None
+        if (self.current_best is None
             or self.ga.get_cost(state.solution) < self.ga.get_cost(self.current_best)
         ):
             self.current_best = state.solution
             self.improvements += 1
+            self.best_found_iteration = self.iteration
 
         for ax in self.axes.flatten():
             ax.clear()
@@ -128,7 +129,8 @@ class AnimationPopup(tk.Toplevel):
         content_first = [
             f"Iterations: {self.iteration}/{self.sim_params['iterations_num']}",
             f"Solutions: {self.sim_params['solutions_num']}",
-            f"Improvements: {self.improvements}"
+            f"Improvements: {self.improvements}",
+            f"Best solution found in: {self.best_found_iteration}"
         ]
 
         content_second = [f"Crossovers: {state.crossok}/{state.crossall}"]
