@@ -12,9 +12,3 @@ def get_number(text):
         raise ValidationError(f"Number '{number}' should be positive")
     return number
 
-
-def create_popup(title, message):
-    popup = Factory.InfoPopup()
-    popup.title = title
-    popup.ids.message_label.text = message
-    popup.open()

@@ -82,3 +82,10 @@ class Problem:
         for u, v, dist, time in self.graph.routes:
             self.s_uv[u, v] = time
             self.g_uv[u, v] = dist
+
+    def asdict(self):
+        return {
+            "couriers": self.n_couriers,
+            "vehicles": self.n_vehicles,
+            "packages": self.n_packages,
+        }

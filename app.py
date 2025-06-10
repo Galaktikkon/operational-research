@@ -1,156 +1,215 @@
-import os
 import sys
-
-import matplotlib
-import matplotlib.pyplot as plt
-
-matplotlib.use("Qt5Agg")
-from kivy.app import App
-from kivy.factory import Factory
-from kivy.properties import ObjectProperty
-from kivy.uix.screenmanager import Screen, ScreenManager
-
+import os
 sys.path.insert(0, os.path.abspath("src"))
-from src.ga import GA
-from src.generator import Generator
+
+import tkinter as tk
+from tkinter import messagebox
+
 from src.problem_initializer import ProblemInitializer
-from src.ui import draw_solution_to_axis
 
+class App:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Main Window")
+        self.root.geometry("800x600")
 
-class LoadedProblem:
-    def __init__(self, problem, solutions_num, attempts_num, iterations_num):
-        self.problem = problem
-        self.solutions_num = solutions_num
-        self.attempts_num = attempts_num
-        self.iterations_num = iterations_num
+        # Store the ProblemInitializer instance here after load or generate
+        self.initializer = None
 
+        # Data dictionaries to store integer values from forms
+        self.problem_data = {}
+        self.simulation_data = {}
+        self.json_path = None
 
-loaded_problem = None
+        # Info label to show current data
+        self.info_label = tk.Label(root, text="No problem or simulation data yet.", font=("Arial", 14), justify="left")
+        self.info_label.pack(pady=10)
 
+        # Buttons container frame
+        btn_frame = tk.Frame(root)
+        btn_frame.pack(pady=20)
 
-class ValidationError(Exception):
-    pass
+        # Update Problem button
+        self.btn_update_problem = tk.Button(btn_frame, text="Update Problem", width=15, command=self.update_problem)
+        self.btn_update_problem.grid(row=0, column=0, padx=5, pady=5)
 
+        # Update Simulation button
+        self.btn_update_simulation = tk.Button(btn_frame, text="Update Simulation", width=15, command=self.update_simulation)
+        self.btn_update_simulation.grid(row=0, column=1, padx=5, pady=5)
 
-def get_number(text):
-    try:
-        number = int(text)
-    except ValueError:
-        raise ValidationError(f"Invalid number: '{text}'")
-    if number <= 0:
-        raise ValidationError(f"Number '{number}' should be positive")
-    return number
+        # Save button - start disabled
+        self.btn_save = tk.Button(btn_frame, text="Save", width=15, command=self.save, state="disabled")
+        self.btn_save.grid(row=0, column=2, padx=5, pady=5)
 
+        # Load button
+        self.btn_load = tk.Button(btn_frame, text="Load", width=15, command=self.load)
+        self.btn_load.grid(row=0, column=3, padx=5, pady=5)
 
-def create_popup(title, message):
-    popup = Factory.InfoPopup()
-    popup.title = title
-    popup.ids.message_label.text = message
-    popup.open()
+        # Generate button
+        self.btn_generate = tk.Button(btn_frame, text="Generate", width=15, command=self.generate)
+        self.btn_generate.grid(row=1, column=0, padx=5, pady=5)
 
+        # Simulate button - start disabled
+        self.btn_simulate = tk.Button(btn_frame, text="Simulate", width=15, command=self.simulate, state="disabled")
+        self.btn_simulate.grid(row=1, column=1, padx=5, pady=5)
 
-class ProblemInputScreen(Screen):
-    couriers = ObjectProperty(None)
-    vehicles = ObjectProperty(None)
-    packages = ObjectProperty(None)
-    json_path = ObjectProperty(None)
+    def update_info_label(self):
+        problem_str = ", ".join(f"{k}: {v}" for k, v in self.problem_data.items()) or "No problem data"
+        simulation_str = ", ".join(f"{k}: {v}" for k, v in self.simulation_data.items()) or "No simulation data"
+        json_str = self.json_path or "No JSON file loaded"
+        self.info_label.config(text=f"Problem: {problem_str}\nSimulation: {simulation_str}\nJSON file: {json_str}")
+
+    def update_problem(self):
+        self.open_integer_form(
+            title="Update Problem",
+            fields=["couriers", "vehicles", "packages"],
+            callback=self.set_problem_data
+        )
+
+    def update_simulation(self):
+        self.open_integer_form(
+            title="Update Simulation",
+            fields=["solutions", "attempts", "iterations"],
+            callback=self.set_simulation_data
+        )
+
+    def open_integer_form(self, title, fields, callback):
+        popup = tk.Toplevel(self.root)
+        popup.title(title)
+        popup.geometry("350x250")
+        popup.grab_set()
+
+        entries = {}
+
+        def submit():
+            data = {}
+            for field in fields:
+                val = entries[field].get()
+                if not val.isdigit():
+                    messagebox.showerror("Invalid input", f"'{field}' must be an integer!")
+                    return
+                data[field] = int(val)
+            callback(data)
+            popup.destroy()
+
+        for i, field in enumerate(fields):
+            tk.Label(popup, text=f"{field.capitalize()}:", font=("Arial", 12)).grid(row=i, column=0, padx=10, pady=8, sticky="e")
+            entry = tk.Entry(popup, font=("Arial", 12))
+            entry.grid(row=i, column=1, padx=10, pady=8)
+            entries[field] = entry
+            if i == 0:
+                entry.focus()
+
+        submit_btn = tk.Button(popup, text="Submit", command=submit, font=("Arial", 12))
+        submit_btn.grid(row=len(fields), column=0, columnspan=2, pady=15)
+
+    def set_problem_data(self, data):
+        self.problem_data = data
+        self.update_info_label()
+
+    def set_simulation_data(self, data):
+        self.simulation_data = data
+        self.update_info_label()
+
+    def save(self):
+        if not self.initializer:
+            messagebox.showerror("Error", "No problem initializer loaded or generated.")
+            return
+        self.open_path_popup("Save JSON File", self.do_save)
+
+    def load(self):
+        self.open_path_popup("Load JSON File", self.do_load)
+
+    def open_path_popup(self, title, callback):
+        popup = tk.Toplevel(self.root)
+        popup.title(title)
+        popup.geometry("400x150")
+        popup.grab_set()
+
+        tk.Label(popup, text="Enter JSON file path:", font=("Arial", 12)).pack(pady=15)
+
+        entry = tk.Entry(popup, font=("Arial", 12), width=40)
+        entry.pack(pady=5)
+        entry.focus()
+
+        def submit():
+            path = entry.get().strip()
+            if not path:
+                messagebox.showerror("Error", "Path cannot be empty!")
+                return
+            callback(path)
+            popup.destroy()
+
+        submit_btn = tk.Button(popup, text="Submit", command=submit, font=("Arial", 12))
+        submit_btn.pack(pady=10)
+
+    def do_save(self, path):
+        try:
+            self.initializer.save_to_json(path)
+            self.json_path = path
+            messagebox.showinfo("Saved", f"Problem saved to {path}")
+            self.update_info_label()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save problem: {e}")
+
+    def do_load(self, path):
+        try:
+            self.initializer = ProblemInitializer.load_from_json(path)
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to load problem: {e}")
+            return
+
+        try:
+            problem = self.initializer.get_problem()
+            # Assuming problem is dict with keys couriers, vehicles, packages, etc.
+            self.problem_data = problem
+            # Clear simulation data on load (or adapt if you want)
+            self.simulation_data = {}
+            self.json_path = path
+            messagebox.showinfo("Loaded", f"Problem loaded from {path}")
+            self.update_info_label()
+
+            # Enable Save and Simulate buttons after load
+            self.btn_save.config(state="normal")
+            self.btn_simulate.config(state="normal")
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to process problem data: {e}")
 
     def generate(self):
-        try:
-            couriers_num = get_number(self.couriers.text)
-            vehicles_num = get_number(self.vehicles.text)
-            packages_num = get_number(self.packages.text)
-        except ValidationError as e:
-            create_popup("Error", str(e))
+        if not self.problem_data:
+            messagebox.showerror("Error", "Please update the problem data first (couriers, vehicles, packages).")
             return
-        initializer = ProblemInitializer()
-        initializer.generate_random(couriers_num, vehicles_num, packages_num)
+
         try:
-            initializer.save_to_json(self.json_path.text)
-        except (PermissionError, OSError):
-            create_popup("Error", f"Couldn't save the problem to {self.json_path.text}")
-            return
-        create_popup("Done", f"Saved the problem to {self.json_path.text}")
+            couriers_num = self.problem_data.get("couriers")
+            vehicles_num = self.problem_data.get("vehicles")
+            packages_num = self.problem_data.get("packages")
 
+            self.initializer = ProblemInitializer()
+            self.initializer.generate_random(couriers_num, vehicles_num, packages_num)
 
-class ProblemLoaderScreen(Screen):
-    json_path = ObjectProperty(None)
-    solutions = ObjectProperty(None)
-    attempts = ObjectProperty(None)
-    iterations = ObjectProperty(None)
+            # Note: per your request, do NOT save automatically on generate
 
-    def run_problem(self):
-        global loaded_problem
-        initializer = ProblemInitializer()
-        try:
-            initializer.generate_from_json(self.json_path.text)
-        except (FileNotFoundError, PermissionError):
-            create_popup("Error", f"Couldn't load file '{self.json_path.text}'")
-            return
-        try:
-            solutions_num = get_number(self.solutions.text)
-            attempts_num = get_number(self.attempts.text)
-            iterations_num = get_number(self.iterations.text)
-        except ValidationError as e:
-            create_popup("Error", str(e))
-            return
-        problem = initializer.get_problem()
-        loaded_problem = LoadedProblem(
-            problem, solutions_num, attempts_num, iterations_num
-        )
-        self.get_root_window().close()
+            messagebox.showinfo("Done", f"Problem generated (not saved).")
 
+            # Enable Save and Simulate buttons after generating
+            self.btn_save.config(state="normal")
+            self.btn_simulate.config(state="normal")
 
-class ScreenManagement(ScreenManager):
-    pass
+            # Also update problem_data from initializer.get_problem() to sync
+            problem = self.initializer.get_problem()
+            self.problem_data = problem
+            self.update_info_label()
 
+        except Exception as e:
+            messagebox.showerror("Error", f"Generation failed: {e}")
 
-class OptimizerApp(App):
-    def build(self):
-        management = ScreenManagement()
-        management.add_widget(ProblemInputScreen(name="problem_input"))
-        management.add_widget(ProblemLoaderScreen(name="problem_loader"))
-        return management
-
+    def simulate(self):
+        # Dummy simulate action for demo
+        messagebox.showinfo("Simulation", "Simulation started with current data!")
 
 if __name__ == "__main__":
-    app = OptimizerApp()
-    app.run()
-
-    if loaded_problem is not None:
-        generator = Generator(loaded_problem.problem)
-
-        solutions = generator.generate_many_feasible(
-            loaded_problem.solutions_num, loaded_problem.attempts_num
-        )
-
-        ga = GA(loaded_problem.problem, solutions)
-
-        initial_best = None
-        current_best = None
-
-        plt.ion()
-        fig, axes = plt.subplots(1, 3, figsize=(24, 7))
-        plt.show()
-        for solution in ga.run(max_iter=loaded_problem.iterations_num):
-            # print(solution)
-            if initial_best is None:
-                initial_best = solution
-            if current_best is None or ga.get_cost(solution) < ga.get_cost(
-                current_best
-            ):
-                current_best = solution
-            for axis in axes:
-                axis.clear()
-            draw_solution_to_axis(initial_best, axes[0])
-            axes[0].set(title=f"Initial solution, cost={ga.get_cost(initial_best):.2f}")
-            draw_solution_to_axis(solution, axes[1])
-            axes[1].set(title=f"Current solution, cost={ga.get_cost(solution):.2f}")
-            draw_solution_to_axis(current_best, axes[2])
-            axes[2].set(title=f"Best solution, cost={ga.get_cost(current_best):.2f}")
-
-            fig.canvas.draw()
-            fig.canvas.flush_events()
-            plt.pause(0.001)
-        plt.ioff()
-        plt.show()
+    root = tk.Tk()
+    app = App(root)
+    root.mainloop()
