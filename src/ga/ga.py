@@ -314,6 +314,3 @@ class GA:
 
             solutions = solutions[: l // 2] + new
 
-        solutions.sort(key=lambda s: self.get_cost(s))
-
-        yield GAState(deepcopy(solutions[0]), crossok, crossok + crossnok)
