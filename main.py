@@ -12,10 +12,18 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from src.problem_initializer import ProblemInitializer
 from src.generator import Generator
 from src.ga import GA
+from src.ga.mutations import (
+    RouteMutation,
+    UnusedVehiclesMutation,
+    UsedVehiclesMutation,
+    PackagesMutation,
+    CouriersMutation,
+)
+
 
 
 class AnimationPopup(tk.Toplevel):
-    def __init__(self, master, problem_data, sim_params):
+    def __init__(self, master, problem_data, sim_params, selected_mutations):
         super().__init__(master)
         self.title("Simulation Animation")
         self.geometry("1200x650")  # slightly taller to fit the button
@@ -44,15 +52,17 @@ class AnimationPopup(tk.Toplevel):
         self.solutions = self.generator.generate_many_feasible(
             sim_params['solutions_num'], sim_params['attempts_num']
         )
-        self.ga = GA(problem_data, self.solutions)
+        self.ga = GA(problem_data, self.solutions, selected_mutations)
         self.ga_iterator = self.ga.run(max_iter=sim_params['iterations_num'])
 
         self.initial_best = None
         self.current_best = None
-        self.iteration = 0
+        self.iteration = -1
         self.improvements = 0
         self.sim_params = sim_params
         self.best_found_iteration = None
+
+        self.selected_mutations = selected_mutations
 
         # Start animation: call self.update_plot every 200 ms
         self.anim = FuncAnimation(self.fig, self.update_plot, interval=200)
@@ -183,6 +193,7 @@ def get_number(text):
     return number
 
 class App:
+
     def __init__(self, root):
         self.root = root
         self.root.title("Main Window")
@@ -197,6 +208,15 @@ class App:
 
         self.json_path = "config/base.json"  # default path
 
+        self.available_mutations = [
+            RouteMutation,
+            UnusedVehiclesMutation,
+            UsedVehiclesMutation,
+            PackagesMutation,
+            CouriersMutation,
+        ]
+        self.selected_mutations = []
+
         self.status_label = tk.Label(
             root,
             text="Problem not loaded or generated",
@@ -206,11 +226,13 @@ class App:
         )
         self.status_label.pack(pady=10)
 
-        info_frame = tk.Frame(root, bg="#f0f0f0")
-        info_frame.pack(padx=10, pady=10, fill="x")
+        # Frame to hold the top two panels side by side
+        top_frame = tk.Frame(root, bg="#f0f0f0")
+        top_frame.pack(padx=10, pady=10, fill="both", expand=False)
 
+        # Problem Data Panel (left)
         self.problem_panel = tk.LabelFrame(
-            info_frame,
+            top_frame,
             text="Problem Data",
             bg="#d0f0d0",
             fg="#206020",
@@ -224,13 +246,14 @@ class App:
             self.problem_panel,
             text="No problem data",
             font=("Arial", 12),
-            bg="#d0f0d0",
+            bg="#d0f0d0",  # match panel bg color here
             justify="left",
         )
         self.problem_info_label.pack(anchor="nw")
 
+        # Simulation Data Panel (right)
         self.simulation_panel = tk.LabelFrame(
-            info_frame,
+            top_frame,
             text="Simulation Data",
             bg="#d0f0d0",
             fg="#206020",
@@ -249,8 +272,24 @@ class App:
         )
         self.simulation_info_label.pack(anchor="nw")
 
+        # Frame for mutation checkboxes row (full width below top_frame)
+        mutations_frame = tk.LabelFrame(
+            root,
+            text="Mutations",
+            bg="#f0f0f0",
+            fg="#206020",
+            font=("Arial", 14, "bold"),
+            padx=15,
+            pady=15,
+        )
+        mutations_frame.pack(padx=10, pady=(0, 20), fill="x")
+
+        self.mutations_frame = mutations_frame
+        self.create_mutation_checkboxes()
+
+        # Buttons frame at bottom, two columns
         btn_frame = tk.Frame(root, bg="#f0f0f0")
-        btn_frame.pack(pady=20)
+        btn_frame.pack(pady=10)
 
         btn_style = {
             "width": 20,
@@ -283,6 +322,35 @@ class App:
 
         self.animation_popups = []
         self.root.protocol("WM_DELETE_WINDOW", self.on_root_close)
+
+    def create_mutation_checkboxes(self):
+        self.mutation_vars = []
+        # Use a grid with 3 columns to arrange checkboxes nicely
+        for idx, mutation_cls in enumerate(self.available_mutations):
+            var = tk.BooleanVar(value=False)
+            chk = tk.Checkbutton(
+                self.mutations_frame,  # updated from self.mutations_panel
+                text=mutation_cls.__name__,
+                variable=var,
+                bg="#f0f0f0",
+                font=("Arial", 11),
+                anchor="w",
+                justify="left",
+                command=self.update_selected_mutations,
+            )
+            # Grid layout: 3 columns
+            row = idx // 3
+            col = idx % 3
+            chk.grid(row=row, column=col, sticky="w", padx=5, pady=5)
+            self.mutation_vars.append((var, mutation_cls))
+
+    def update_selected_mutations(self):
+        self.selected_mutations = [
+            mutation_cls
+            for var, mutation_cls in self.mutation_vars
+            if var.get()
+        ]
+
 
     def update_info_labels(self):
         if self.problem_data and hasattr(self.problem_data, "asdict"):
@@ -528,7 +596,7 @@ class App:
         # Clone and transform keys by appending '_num'
         simulation_params = {f"{k}_num": v for k, v in self.simulation_data.items()}
 
-        popup = AnimationPopup(self.root, self.problem_data, simulation_params)
+        popup = AnimationPopup(self.root, self.problem_data, simulation_params, self.selected_mutations)
         self.animation_popups.append(popup)
     
     def on_root_close(self):
