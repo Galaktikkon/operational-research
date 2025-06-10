@@ -18,12 +18,26 @@ class AnimationPopup(tk.Toplevel):
     def __init__(self, master, problem_data, sim_params):
         super().__init__(master)
         self.title("Simulation Animation")
-        self.geometry("1200x600")
+        self.geometry("1200x650")  # slightly taller to fit the button
 
         # Setup matplotlib figure and canvas
         self.fig, self.axes = plt.subplots(2, 3, figsize=(12, 4))
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+        # Pause/Resume Button
+        self.is_paused = False
+        self.pause_btn = tk.Button(
+            self,
+            text="Pause",
+            font=("Arial", 12, "bold"),
+            bg="#ff9800",
+            fg="white",
+            relief="raised",
+            bd=3,
+            command=self.toggle_pause,
+        )
+        self.pause_btn.pack(pady=5)
 
         # Setup GA & generator
         self.generator = Generator(problem_data)
@@ -42,19 +56,23 @@ class AnimationPopup(tk.Toplevel):
         # Start animation: call self.update_plot every 200 ms
         self.anim = FuncAnimation(self.fig, self.update_plot, interval=200)
         self.protocol("WM_DELETE_WINDOW", self.on_close)
-        
+
+    def toggle_pause(self):
+        if self.is_paused:
+            self.anim.event_source.start()
+            self.pause_btn.config(text="Pause", bg="#ff9800")
+        else:
+            self.anim.event_source.stop()
+            self.pause_btn.config(text="Resume", bg="#4caf50")
+        self.is_paused = not self.is_paused
+
     def on_close(self):
         if self.anim:
             self.anim.event_source.stop()
             self.anim = None
 
-        # Destroy the canvas widget explicitly
         self.canvas.get_tk_widget().destroy()
-
-        # Close the matplotlib figure completely
         plt.close(self.fig)
-
-        # Then destroy this popup window
         self.destroy()
 
     def draw_solution_to_axis(self, solution, axis):
