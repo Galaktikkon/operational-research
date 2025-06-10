@@ -5,8 +5,149 @@ sys.path.insert(0, os.path.abspath("src"))
 import tkinter as tk
 from tkinter import messagebox
 
-from src.problem_initializer import ProblemInitializer
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+from src.problem_initializer import ProblemInitializer
+from src.generator import Generator
+from src.ga import GA
+
+
+class AnimationPopup(tk.Toplevel):
+    def __init__(self, master, problem_data, sim_params):
+        super().__init__(master)
+        self.title("Simulation Animation")
+        self.geometry("1200x600")
+
+        # Setup matplotlib figure and canvas
+        self.fig, self.axes = plt.subplots(2, 3, figsize=(12, 4))
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self)
+        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+        # Setup GA & generator
+        self.generator = Generator(problem_data)
+        self.solutions = self.generator.generate_many_feasible(
+            sim_params['solutions_num'], sim_params['attempts_num']
+        )
+        self.ga = GA(problem_data, self.solutions)
+        self.ga_iterator = self.ga.run(max_iter=sim_params['iterations_num'])
+
+        self.initial_best = None
+        self.current_best = None
+        self.iteration = 0
+        self.improvements = 0
+        self.sim_params = sim_params
+
+        # Start animation: call self.update_plot every 200 ms
+        self.anim = FuncAnimation(self.fig, self.update_plot, interval=200)
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
+        
+    def on_close(self):
+        if self.anim:
+            self.anim.event_source.stop()
+            self.anim = None
+
+        # Destroy the canvas widget explicitly
+        self.canvas.get_tk_widget().destroy()
+
+        # Close the matplotlib figure completely
+        plt.close(self.fig)
+
+        # Then destroy this popup window
+        self.destroy()
+
+    def draw_solution_to_axis(self, solution, axis):
+        points = solution.problem.graph.points.T
+        axis.scatter(points[0], points[1], s=60)
+
+        w = solution.problem.graph.warehouse
+        axis.scatter(points[0][w], points[1][w], s=65, c="red")
+
+        for j in range(solution.problem.n_vehicles):
+            for u, v in zip(solution.x_jv[j], solution.x_jv[j, 1:]):
+                axis.arrow(
+                    *points[:, u],
+                    *(points[:, v] - points[:, u]),
+                    color=f"C{j}",
+                    head_width=0.6,
+                    length_includes_head=True,
+                )
+                if v == solution.problem.graph.warehouse:
+                    break
+
+        for i in range(points.shape[1]):
+            axis.annotate(f"{i}", (points[0][i], points[1][i]))
+
+    def update_plot(self, frame):
+        try:
+            state = next(self.ga_iterator)
+        except StopIteration:
+            self.anim.event_source.stop()
+            return
+
+        if self.initial_best is None:
+            self.initial_best = state.solution
+        if (
+            self.current_best is None
+            or self.ga.get_cost(state.solution) < self.ga.get_cost(self.current_best)
+        ):
+            self.current_best = state.solution
+            self.improvements += 1
+
+        for ax in self.axes.flatten():
+            ax.clear()
+
+        self.draw_solution_to_axis(self.initial_best, self.axes[0, 0])
+        self.axes[0, 0].set(title=f"Initial, cost={self.ga.get_cost(self.initial_best):.2f}")
+
+        self.draw_solution_to_axis(state.solution, self.axes[0, 1])
+        self.axes[0, 1].set(title=f"Current, cost={self.ga.get_cost(state.solution):.2f}")
+
+        self.draw_solution_to_axis(self.current_best, self.axes[0, 2])
+        self.axes[0, 2].set(title=f"Best, cost={self.ga.get_cost(self.current_best):.2f}")
+
+        content_first = [
+            f"Iterations: {self.iteration}/{self.sim_params['iterations_num']}",
+            f"Solutions: {self.sim_params['solutions_num']}",
+            f"Improvements: {self.improvements}"
+        ]
+
+        content_second = [f"Crossovers: {state.crossok}/{state.crossall}"]
+        for m in state.mutations:
+            to_add = f"{m.__name__}: {m.times_feasible_created}/{m.times_run}"
+            content_second.append(to_add)
+
+        content = ["\n".join(content_first), "\n".join(content_second)]
+        colors = ("#f0f8ff", "#f0f8ff")
+
+        stats_config = [
+            {"content": content, "bgcolor": color}
+            for content, color in zip(content, colors)
+        ]
+
+        for col, config in enumerate(stats_config):
+            ax = self.axes[1, col]
+            ax.text(
+                0.5,
+                0.5,
+                config["content"],
+                ha='center',
+                va='center',
+                fontsize=self.fig.get_size_inches()[0]*1,
+                linespacing=1.5,
+                bbox=dict(boxstyle='round,pad=1', 
+                          facecolor=config['bgcolor'],
+                          edgecolor='#888888',
+                          linewidth=2,
+                          alpha=0.9)
+            )
+
+        for ax in self.axes[1]:
+            ax.axis('off')
+
+        self.canvas.draw()
+        self.iteration += 1
 
 class ValidationError(Exception):
     pass
@@ -21,7 +162,6 @@ def get_number(text):
         raise ValidationError(f"Number '{number}' should be positive")
     return number
 
-
 class App:
     def __init__(self, root):
         self.root = root
@@ -34,6 +174,8 @@ class App:
         self.problem_ready = False
 
         self.initializer = ProblemInitializer()
+
+        self.json_path = "config/base.json"  # default path
 
         self.status_label = tk.Label(
             root,
@@ -87,7 +229,6 @@ class App:
         )
         self.simulation_info_label.pack(anchor="nw")
 
-        # Buttons frame with two columns grid layout
         btn_frame = tk.Frame(root, bg="#f0f0f0")
         btn_frame.pack(pady=20)
 
@@ -101,7 +242,6 @@ class App:
             "bd": 3,
         }
 
-        # List of buttons with (text, command, initial_state)
         buttons = [
             ("Update Problem", self.update_problem, "normal"),
             ("Update Simulation", self.update_simulation, "normal"),
@@ -111,18 +251,18 @@ class App:
             ("Simulate", self.simulate, "disabled"),
         ]
 
-        # Place buttons in 2 columns grid
         for idx, (text, cmd, state) in enumerate(buttons):
             btn = tk.Button(btn_frame, text=text, command=cmd, state=state, **btn_style)
             row = idx // 2
             col = idx % 2
             btn.grid(row=row, column=col, padx=15, pady=10)
-
-            # Save references for later state updates
             setattr(self, f"btn_{text.lower().replace(' ', '_')}", btn)
 
         self.update_info_labels()
         self.update_buttons_state()
+
+        self.animation_popups = []
+        self.root.protocol("WM_DELETE_WINDOW", self.on_root_close)
 
     def update_info_labels(self):
         if self.problem_data and hasattr(self.problem_data, "asdict"):
@@ -157,10 +297,16 @@ class App:
         )
 
     def update_problem(self):
+        defaults = {
+            "couriers": getattr(self.problem_data, "n_couriers", 5),
+            "vehicles": getattr(self.problem_data, "n_vehicles", 3),
+            "packages": getattr(self.problem_data, "n_packages", 20),
+        }
         self.open_integer_form(
             title="Update Problem",
             fields=["couriers", "vehicles", "packages"],
             callback=self.set_problem_data_from_form,
+            defaults=defaults,
         )
 
     def set_problem_data_from_form(self, data):
@@ -183,10 +329,16 @@ class App:
         self.update_buttons_state()
 
     def update_simulation(self):
+        defaults = {
+            "solutions": self.simulation_data.get("solutions", 10),
+            "attempts": self.simulation_data.get("attempts", 1000),
+            "iterations": self.simulation_data.get("iterations", 500),
+        }
         self.open_integer_form(
             title="Update Simulation",
             fields=["solutions", "attempts", "iterations"],
             callback=self.set_simulation_data,
+            defaults=defaults,
         )
 
     def set_simulation_data(self, data):
@@ -194,7 +346,7 @@ class App:
         self.update_info_labels()
         self.update_buttons_state()
 
-    def open_integer_form(self, title, fields, callback):
+    def open_integer_form(self, title, fields, callback, defaults=None):
         popup = tk.Toplevel(self.root)
         popup.title(title)
         popup.geometry("350x250")
@@ -223,9 +375,16 @@ class App:
                 font=("Arial", 12),
                 bg="#f0f0f0",
             ).grid(row=i, column=0, padx=10, pady=8, sticky="e")
+
             entry = tk.Entry(popup, font=("Arial", 12))
             entry.grid(row=i, column=1, padx=10, pady=8)
             entries[field] = entry
+
+            if defaults and field in defaults:
+                entry.insert(0, str(defaults[field]))
+            else:
+                entry.insert(0, "")
+
             if i == 0:
                 entry.focus()
 
@@ -243,12 +402,12 @@ class App:
         submit_btn.grid(row=len(fields), column=0, columnspan=2, pady=15)
 
     def save(self):
-        self.open_path_popup("Save JSON File", self.do_save)
+        self.open_path_popup("Save JSON File", self.do_save, default_path=self.json_path)
 
     def load(self):
-        self.open_path_popup("Load JSON File", self.do_load)
+        self.open_path_popup("Load JSON File", self.do_load, default_path=self.json_path)
 
-    def open_path_popup(self, title, callback):
+    def open_path_popup(self, title, callback, default_path=None):
         popup = tk.Toplevel(self.root)
         popup.title(title)
         popup.geometry("400x150")
@@ -265,6 +424,9 @@ class App:
         entry = tk.Entry(popup, font=("Arial", 12), width=40)
         entry.pack(pady=5)
         entry.focus()
+
+        if default_path:
+            entry.insert(0, default_path)
 
         def submit():
             path = entry.get().strip()
@@ -294,6 +456,7 @@ class App:
 
         try:
             self.initializer.save_to_json(path)
+            self.json_path = path  # update path
             messagebox.showinfo("Done", f"Saved the problem successfully to '{path}'")
         except (PermissionError, OSError) as e:
             messagebox.showerror("Error", f"Couldn't save the problem to '{path}':\n{e}")
@@ -304,6 +467,7 @@ class App:
             problem = self.initializer.get_problem()
             self.problem_data = problem
             self.problem_ready = True
+            self.json_path = path  # update path
             self.update_info_labels()
             self.update_buttons_state()
             messagebox.showinfo("Done", f"Problem loaded from '{path}'")
@@ -340,7 +504,23 @@ class App:
                 "Error", "Make sure problem is loaded/generated and simulation data is updated."
             )
             return
-        messagebox.showinfo("Simulation", "Simulation started with current data!")
+
+        # Clone and transform keys by appending '_num'
+        simulation_params = {f"{k}_num": v for k, v in self.simulation_data.items()}
+
+        popup = AnimationPopup(self.root, self.problem_data, simulation_params)
+        self.animation_popups.append(popup)
+    
+    def on_root_close(self):
+        for popup in self.animation_popups:
+            if popup.winfo_exists():
+                if popup.anim:
+                    popup.anim.event_source.stop()
+                    popup.anim = None
+                popup.destroy()
+        self.animation_popups.clear()
+        self.root.destroy()
+
 
 
 if __name__ == "__main__":
