@@ -57,10 +57,10 @@ class AnimationPopup(tk.Toplevel):
 
         self.initial_best = None
         self.current_best = None
-        self.iteration = -1
+        self.iteration = 0
         self.improvements = 0
         self.sim_params = sim_params
-        self.best_found_iteration = None
+        self.best_found_iteration = 0
 
         self.selected_mutations = selected_mutations
 
@@ -117,9 +117,8 @@ class AnimationPopup(tk.Toplevel):
 
         if self.initial_best is None:
             self.initial_best = state.solution
-        if (self.current_best is None
-            or self.ga.get_cost(state.solution) < self.ga.get_cost(self.current_best)
-        ):
+            self.current_best = state.solution
+        elif self.ga.get_cost(state.solution) < self.ga.get_cost(self.current_best):
             self.current_best = state.solution
             self.improvements += 1
             self.best_found_iteration = self.iteration
