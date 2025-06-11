@@ -49,7 +49,7 @@ class GA:
         self,
         problem: Problem,
         initial_population: list[Solution],
-        mutations: list[Mutation] = [
+        mutations: list[type[Mutation]] = [
             CouriersMutation,
             UsedVehiclesMutation,
             UnusedVehiclesMutation,
@@ -62,12 +62,12 @@ class GA:
         self.problem = problem
         self.checker = SolutionChecker(problem)
 
-        self.C = 1
-        self.alpha = 0
+        self.C = 1  # TODO: do configa
+        self.alpha = 0  # TODO: do configa
 
         self._cost_function_runs = 0
 
-    @functools.cache
+    @functools.cache  # TODO: wplywa na _cost_function_runs
     def get_cost(self, solution: Solution):
         """
         Calculate the cost of a solution.
@@ -313,4 +313,3 @@ class GA:
                 o += 1
 
             solutions = solutions[: l // 2] + new
-

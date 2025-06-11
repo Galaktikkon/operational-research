@@ -3,6 +3,9 @@ import numpy as np
 from model import Solution
 
 
+# TODO: dodac prawdopodobienstwo kazdej osobno do configa
+
+
 class Mutation:
     """Base class for mutations in a genetic algorithm.
     This class defines the interface for mutations that can be applied to a solution.

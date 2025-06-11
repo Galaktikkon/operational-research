@@ -6,6 +6,8 @@ from model import Graph
 from model.input import Courier, Package, Vehicle
 from model.problem import Problem
 
+# TODO: dodać rzeczy do configa
+
 
 class ProblemInitializer:
     """Class to generate a problem instance for the vehicle routing problem.
