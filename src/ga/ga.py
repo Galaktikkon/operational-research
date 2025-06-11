@@ -173,10 +173,15 @@ class GA:
 
         # Assign couriers to vehicles in a way that respects permissions
         for j in np.random.permutation(s1_used_vehicles):
-            # TODO: sprawdzac czy trasa nie jest dluzsza niz czas pracy kuriera
+            vehicle_travel_time = s1.get_l_vj()[problem.graph.warehouse, j]
             for _ in range(2 * len(s2_used_set)):
                 i = np.random.choice(list(s2_used_set))
-                if (i, j) in problem.permissions and i not in a_set:
+                c = problem.couriers[i]
+                if (
+                    (i, j) in problem.permissions
+                    and i not in a_set
+                    and vehicle_travel_time <= c.work_limit * 60
+                ):
                     a_set.add(i)
                     s2_used_set.remove(i)
                     a_z_j[j] = i
@@ -185,7 +190,12 @@ class GA:
                 # If no used couriers are available, try unused couriers
                 for _ in range(2 * len(s2_unused_set)):
                     i = np.random.choice(list(s2_unused_set))
-                    if (i, j) in problem.permissions and i not in a_set:
+                    c = problem.couriers[i]
+                    if (
+                        (i, j) in problem.permissions
+                        and i not in a_set
+                        and vehicle_travel_time <= c.work_limit * 60
+                    ):
                         a_set.add(i)
                         s2_unused_set.remove(i)
                         a_z_j[j] = i
@@ -195,9 +205,15 @@ class GA:
 
         # Assign couriers to vehicles in b in a way that respects permissions
         for j in np.random.permutation(s2_used_vehicles):
+            vehicle_travel_time = s2.get_l_vj()[problem.graph.warehouse, j]
             for _ in range(2 * len(s1_used_set)):
                 i = np.random.choice(list(s1_used_set))
-                if (i, j) in problem.permissions and i not in b_set:
+                c = problem.couriers[i]
+                if (
+                    (i, j) in problem.permissions
+                    and i not in b_set
+                    and vehicle_travel_time <= c.work_limit * 60
+                ):
                     b_set.add(i)
                     s1_used_set.remove(i)
                     b_z_j[j] = i
@@ -206,7 +222,12 @@ class GA:
                 # If no used couriers are available, try unused couriers
                 for _ in range(2 * len(s1_unused_set)):
                     i = np.random.choice(list(s1_unused_set))
-                    if (i, j) in problem.permissions and i not in b_set:
+                    c = problem.couriers[i]
+                    if (
+                        (i, j) in problem.permissions
+                        and i not in b_set
+                        and vehicle_travel_time <= c.work_limit * 60
+                    ):
                         b_set.add(i)
                         s1_unused_set.remove(i)
                         b_z_j[j] = i
@@ -308,7 +329,7 @@ class GA:
             # new = [self.mutation(n) for n in new if n]
             # new = [self.mutation(n) for n in solutions[: l // 2]]
             o = 0
-            while len(new) < l // 2:
+            while len(new) + l // 2 < l:
                 new.append(solutions[l // 2 + o])
                 o += 1
 
