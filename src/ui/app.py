@@ -29,7 +29,6 @@ class App:
         self.root.configure(bg="#f0f0f0")
 
         self.problem_data = {"couriers": 5, "vehicles": 3, "packages": 20}
-        self.simulation_data = {}
         self.problem = None
 
         self.initializer = ProblemInitializer()
@@ -198,17 +197,13 @@ class App:
 
     def setup_simulation_frame(self):
         defaults = {
-            "solutions": self.simulation_data.get("solutions", 10),
-            "attempts": self.simulation_data.get("attempts", 1000),
-            "iterations": self.simulation_data.get("iterations", 500),
+            "solutions": 10,
+            "attempts": 1000,
+            "iterations": 500,
         }
         return self.create_integer_form(
             self.simulation_panel, SIMULATION_FIELDS, defaults
         )
-
-    def set_simulation_data(self, data):
-        self.simulation_data = data
-        self.udpate_state()
 
     def create_integer_form(self, frame, fields, defaults=None):
         entries = {}
@@ -322,11 +317,11 @@ class App:
         self.set_problem_data(data)
 
         try:
-            couriers_num = self.problem_data["couriers"]
-            vehicles_num = self.problem_data["vehicles"]
-            packages_num = self.problem_data["packages"]
+            couriers = self.problem_data["couriers"]
+            vehicles = self.problem_data["vehicles"]
+            packages = self.problem_data["packages"]
 
-            self.initializer.generate_random(couriers_num, vehicles_num, packages_num)
+            self.initializer.generate_random(couriers, vehicles, packages)
             self.problem = self.initializer.get_problem()
 
             self.udpate_state()
@@ -335,13 +330,11 @@ class App:
             messagebox.showerror("Error", f"Generation failed:\n{e}")
 
     def simulate(self):
-        data = validate_form(self.simulation_form, SIMULATION_FIELDS)
-        self.set_simulation_data(data)
-
-        simulation_params = {f"{k}_num": v for k, v in self.simulation_data.items()}
+        simulation_data = validate_form(self.simulation_form, SIMULATION_FIELDS)
+        self.udpate_state()
 
         popup = AnimationPopup(
-            self.root, self.problem, simulation_params, self.selected_mutations
+            self.root, self.problem, simulation_data, self.selected_mutations
         )
         self.animation_popups.append(popup)
 

@@ -97,10 +97,10 @@ class AnimationPopup(tk.Toplevel):
         # Setup GA & generator (assuming these are given or imported)
         self.generator = Generator(problem_data)
         self.solutions = self.generator.generate_many_feasible(
-            sim_params["solutions_num"], sim_params["attempts_num"]
+            sim_params["solutions"], sim_params["attempts"]
         )
         self.ga = GA(problem_data, self.solutions, selected_mutations)
-        self.ga_iterator = self.ga.run(max_iter=sim_params["iterations_num"])
+        self.ga_iterator = self.ga.run(max_iter=sim_params["iterations"])
 
         self.initial_best = None
         self.current_best = None
@@ -211,9 +211,9 @@ class AnimationPopup(tk.Toplevel):
 
         # Prepare the info text blocks
         iteration_info = [
-            f"Iterations: {self.iteration}/{self.sim_params['iterations_num']}",
-            f"Solutions' population: {self.sim_params['solutions_num']}",
-            f"Attempts: {self.sim_params['attempts_num']}",
+            f"Iterations: {self.iteration}/{self.sim_params['iterations']}",
+            f"Solutions' population: {self.sim_params['solutions']}",
+            f"Attempts: {self.sim_params['attempts']}",
             f"Improvements: {self.improvements}",
             f"Best solution found in: {self.best_found_iteration}",
         ]
