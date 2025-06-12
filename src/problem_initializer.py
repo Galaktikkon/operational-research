@@ -11,6 +11,12 @@ def randf(start, end):
     return np.random.rand() * (end - start) + start
 
 
+def randi(start, end):
+    if start == end:
+        return start
+    return np.random.randint(start, end)
+
+
 class ProblemInitializer:
     """Class to generate a problem instance for the vehicle routing problem.
 
@@ -138,8 +144,8 @@ class ProblemInitializer:
         -------
             Courier: A courier object with random rate and work limit.
         """
-        rate = np.random.randint(*self.rate_range)
-        work_limit = np.random.randint(*self.work_limit_range)
+        rate = randi(*self.rate_range)
+        work_limit = randi(*self.work_limit_range)
         return Courier(rate, work_limit * 60)
 
     def random_vehicle(self):
@@ -150,7 +156,7 @@ class ProblemInitializer:
         -------
             Vehicle: A vehicle object with random capacity and fuel.
         """
-        capacity = np.random.randint(*self.capacity_range)
+        capacity = randi(*self.capacity_range)
         fuel = np.round(randf(*self.fuel_range), 2)
         return Vehicle(capacity, fuel)
 
@@ -191,8 +197,8 @@ class ProblemInitializer:
         address = np.random.randint(max_address)
 
         weight = np.round(randf(*self.weight_range), 2)
-        start_time = np.random.randint(*self.package_start_time_range) * 60
-        end_time = np.random.randint(*self.package_end_time_range) * 60
+        start_time = randi(*self.package_start_time_range) * 60
+        end_time = randi(*self.package_end_time_range) * 60
         type = "pickup" if np.random.rand() < self.pickup_delivery_proba else "delivery"
 
         return Package(address, weight, start_time, end_time, type)

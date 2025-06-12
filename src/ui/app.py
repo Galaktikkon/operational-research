@@ -14,38 +14,8 @@ from ga.mutations import (
 )
 
 from .utils import *
+from .constans import *
 from .animation_popup import AnimationPopup
-
-
-PROBLEM_FIELDS = [
-    "couriers",
-    "vehicles",
-    "packages",
-    "max coord",
-    "time dist coeff",
-    "permission proba",
-    "pickup delivery proba",
-]
-
-
-# "rate from",
-# "rate to",
-# "work limit from",
-# "work limit to",
-# "capacity from",
-# "capacity to",
-# "fuel from",
-# "fuel to",
-# "weight from",
-# "weight to"
-SIMULATION_FIELDS = [
-    "solutions",
-    "attempts",
-    "iterations",
-    "C",
-    "alpha",
-    "animation delay",
-]
 
 
 class App:
@@ -53,7 +23,7 @@ class App:
     def __init__(self, root):
         self.root = root
         self.root.title("Main Window")
-        self.root.geometry("900x600")
+        self.root.geometry("1000x600")
         self.root.configure(bg="#f0f0f0")
 
         self.problem = None
@@ -213,29 +183,18 @@ class App:
         )
 
     def setup_generator_frame(self):
-        defaults = {
-            "couriers": 5,
-            "vehicles": 3,
-            "packages": 20,
-            "max coord": 50,
-            "time dist coeff": 0.5,
-            "permission proba": 1,
-            "pickup delivery proba": 0.5,
-        }
-        return self.create_form(self.generator_panel, PROBLEM_FIELDS, defaults)
+        return self.create_form(
+            self.generator_panel, GENERATOR_SINGLE_FIELDS, GENERATOR_DEFAULTS
+        ) | self.create_range_form(
+            self.generator_panel, GENERATOR_RANGE_FIELDS, GENERATOR_RANGE_DEFAULTS
+        )
 
     def setup_simulation_frame(self):
-        defaults = {
-            "solutions": 10,
-            "attempts": 1000,
-            "iterations": 500,
-            "C": 1.2,
-            "alpha": 0.9,
-            "animation delay": 50,
-        }
-        return self.create_form(self.simulation_panel, SIMULATION_FIELDS, defaults)
+        return self.create_form(
+            self.simulation_panel, SIMULATION_FIELDS, SIMULATION_DEFAULTS
+        )
 
-    def create_form(self, frame, fields, defaults=None):
+    def create_form(self, frame, fields, defaults={}):
         entries = {}
 
         for i, field in enumerate(fields):
@@ -248,15 +207,36 @@ class App:
 
             entry = tk.Entry(frame, font=("Arial", 12), width=8)
             entry.grid(row=i, column=1, pady=8)
+            entry.insert(0, str(defaults.get(field, "")))
             entries[field] = entry
 
-            if defaults and field in defaults:
-                entry.insert(0, str(defaults[field]))
-            else:
-                entry.insert(0, "")
+        return entries
 
-            if i == 0:
-                entry.focus()
+    def create_range_form(self, frame, fields, defaults={}):
+        entries = {}
+
+        for i, field in enumerate(fields):
+            tk.Label(
+                frame,
+                text=f"{field.capitalize()}:",
+                font=("Arial", 12),
+                bg="#f0f0f0",
+            ).grid(row=i, column=2, padx=10, pady=8, sticky="e")
+
+            entry_min = tk.Entry(frame, font=("Arial", 12), width=5)
+            entry_min.grid(row=i, column=3, pady=8)
+            entry_min.insert(0, str(defaults.get(f"{field}_min", "")))
+
+            tk.Label(frame, text="-", font=("Arial", 12), bg="#f0f0f0").grid(
+                row=i, column=4, padx=5
+            )
+
+            entry_max = tk.Entry(frame, font=("Arial", 12), width=5)
+            entry_max.grid(row=i, column=5, pady=8)
+            entry_max.insert(0, str(defaults.get(f"{field}_max", "")))
+
+            entries[f"{field}_min"] = entry_min
+            entries[f"{field}_max"] = entry_max
 
         return entries
 
@@ -339,12 +319,13 @@ class App:
             )
 
     def generate(self):
-        problem_data = validate_form(self.generator_form, PROBLEM_FIELDS)
+        generator_data = validate_form(self.generator_form, GENERATOR_FIELDS)
+        print(generator_data)
 
         try:
-            couriers = problem_data["couriers"]
-            vehicles = problem_data["vehicles"]
-            packages = problem_data["packages"]
+            couriers = generator_data["couriers"]
+            vehicles = generator_data["vehicles"]
+            packages = generator_data["packages"]
 
             self.initializer.generate_random(couriers, vehicles, packages)
             self.problem = self.initializer.get_problem()
