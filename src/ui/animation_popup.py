@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from src.generator import Generator
-from src.ga import GA
+from generator import Generator
+from ga import GA
 from .utils import *
 
 

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from src.model import Solution
-from src.ga.mutations import (
+from model import Solution
+from ga.mutations import (
     CouriersMutation,
     PackagesMutation,
     RouteMutation,

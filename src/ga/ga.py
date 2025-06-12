@@ -17,7 +17,7 @@ from .mutations import (
     CouriersMutation,
 )
 
-from src.ga.ga_state import GAState
+from ga.ga_state import GAState
 
 crossok = 0
 crossnok = 0

@@ -3,13 +3,14 @@ import re
 import tkinter as tk
 from tkinter import messagebox
 
-from src.problem_initializer import ProblemInitializer
-from src.ga.mutations import (
+from problem_initializer import ProblemInitializer
+from ga.mutations import (
     RouteMutation,
     UnusedVehiclesMutation,
     UsedVehiclesMutation,
     PackagesMutation,
     CouriersMutation,
+    Mutation,
 )
 
 from .utils import *
@@ -33,14 +34,13 @@ class App:
 
         self.json_path = "config/base.json"
 
-        self.available_mutations = [
+        self.available_mutations: list[type[Mutation]] = [
             RouteMutation,
             UnusedVehiclesMutation,
             UsedVehiclesMutation,
             PackagesMutation,
             CouriersMutation,
         ]
-        self.selected_mutations = []
 
         self.status_label = tk.Label(
             root,
@@ -92,7 +92,7 @@ class App:
             pady=15,
         )
         self.mutations_frame.pack(side="left", expand=True, fill="both", padx=10)
-        self.create_mutation_checkboxes()
+        self.create_mutation_inputs()
 
         btn_frame = tk.LabelFrame(
             bottom_frame,
@@ -117,8 +117,8 @@ class App:
 
         buttons = [
             ("Load", self.load, "normal"),
-            ("Save", self.save, "normal"),
             ("Generate", self.generate, "normal"),
+            ("Save", self.save, "normal"),
             ("Simulate", self.simulate, "disabled"),
         ]
 
@@ -140,31 +140,36 @@ class App:
         self.animation_popups = []
         self.root.protocol("WM_DELETE_WINDOW", self.on_root_close)
 
-    def create_mutation_checkboxes(self):
-        self.mutation_vars = []
-        # Use a grid with 3 columns to arrange checkboxes nicely
+    def create_mutation_inputs(self):
         for idx, mutation_cls in enumerate(self.available_mutations):
-            var = tk.BooleanVar(value=False)
-            chk = tk.Checkbutton(
-                self.mutations_frame,  # updated from self.mutations_panel
+            var = tk.StringVar(value="0.5")
+
+            def update_value(var=var, mutation_cls=mutation_cls):
+                try:
+                    value = float(var.get())
+                    if 0 <= value <= 1:
+                        mutation_cls.proba = value
+                    else:
+                        mutation_cls.proba = 0
+                except ValueError:
+                    mutation_cls.proba = 0
+
+            tk.Label(
+                self.mutations_frame,
                 text=re.sub("([a-z])([A-Z])", r"\1 \2", mutation_cls.__name__),
-                variable=var,
-                bg="#f0f0f0",
                 font=("Arial", 11),
+                bg="#f0f0f0",
                 anchor="w",
                 justify="left",
-                command=self.update_selected_mutations,
-            )
-            # Grid layout: 3 columns
-            row = idx // 1
-            col = idx % 1
-            chk.grid(row=row, column=col, sticky="w", padx=5, pady=5)
-            self.mutation_vars.append((var, mutation_cls))
+            ).grid(row=idx, column=0, sticky="w", padx=5, pady=5)
 
-    def update_selected_mutations(self):
-        self.selected_mutations = [
-            mutation_cls for var, mutation_cls in self.mutation_vars if var.get()
-        ]
+            entry = tk.Entry(
+                self.mutations_frame, font=("Arial", 11), textvariable=var, width=8
+            )
+            entry.grid(row=idx, column=1, padx=5, pady=5)
+            var.trace_add(
+                "write", lambda *args, v=var, cls=mutation_cls: update_value(v, cls)
+            )
 
     def _problem_ready(self):
         return self.problem is not None
@@ -326,7 +331,7 @@ class App:
         self.udpate_state()
 
         popup = AnimationPopup(
-            self.root, self.problem, simulation_data, self.selected_mutations
+            self.root, self.problem, simulation_data, self.available_mutations
         )
         self.animation_popups.append(popup)
 
