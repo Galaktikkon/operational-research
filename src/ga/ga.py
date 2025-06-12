@@ -290,7 +290,7 @@ class GA:
 
         return solution
 
-    def run(self, max_iter=1000, verbose=True):
+    def run(self, max_iter=1000):
         """Run the genetic algorithm to optimize the solution.
         This method initializes the population, performs crossover and mutation operations,
         and iteratively improves the solutions until the maximum number of iterations is reached.

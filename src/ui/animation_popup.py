@@ -5,13 +5,12 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from ga.mutations import *
-from generator import Generator
 from ga import GA
 from .utils import *
 
 
 class AnimationPopup(tk.Toplevel):
-    def __init__(self, master, problem, sim_params, on_popup_close):
+    def __init__(self, master, problem, sim_params, on_popup_close, initial_population):
         super().__init__(master)
         self.root = master
         self.title("Simulation Animation")
@@ -24,6 +23,9 @@ class AnimationPopup(tk.Toplevel):
         self.fig.tight_layout()
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+        self.axes[2].set_xlabel("Iterations")
+        self.axes[2].set_ylabel("Cost")
 
         self.bottom_frame = tk.Frame(self)
         self.bottom_frame.pack(pady=20, fill="x")
@@ -39,6 +41,7 @@ class AnimationPopup(tk.Toplevel):
             RouteMutation,
         ]
 
+        self.costs = []
         self.popups = []
         self.labels = {}
 
@@ -134,12 +137,7 @@ class AnimationPopup(tk.Toplevel):
         )
         self.show_problem_btn.grid(row=2, column=0, padx=5)
 
-        # Setup GA & generator (assuming these are given or imported)
-        self.generator = Generator(problem)
-        self.solutions = self.generator.generate_many_feasible(
-            sim_params["solutions"], sim_params["attempts"]
-        )
-        self.ga = GA(problem, self.solutions, sim_params["C"], sim_params["alpha"])
+        self.ga = GA(problem, initial_population, sim_params["C"], sim_params["alpha"])
         self.ga_iterator = self.ga.run(max_iter=sim_params["iterations"])
 
         self.initial_best = None
@@ -201,6 +199,9 @@ class AnimationPopup(tk.Toplevel):
             self.anim.event_source.stop()
             return
 
+        cost = self.ga.get_cost(state.solution)
+        self.costs.append(cost)
+
         if self.initial_best is None:
             self.initial_best = state.solution
             self.current_best = state.solution
@@ -209,7 +210,7 @@ class AnimationPopup(tk.Toplevel):
             self.axes[0].set(
                 title=f"Initial, cost={self.ga.get_cost(self.initial_best):.2f}"
             )
-        elif self.ga.get_cost(state.solution) < self.ga.get_cost(self.current_best):
+        elif cost < self.ga.get_cost(self.current_best):
             self.current_best = state.solution
 
             if hasattr(self, "best_text") and self.best_text.winfo_exists():
@@ -226,6 +227,10 @@ class AnimationPopup(tk.Toplevel):
         draw_solution_to_axis(state.solution, self.axes[1])
         self.axes[1].set(
             title=f"Current best, cost={self.ga.get_cost(state.solution):.2f}"
+        )
+
+        self.axes[2].plot(
+            range(len(self.costs)), self.costs, linestyle="-", color="blue"
         )
 
         iter_text = f"{self.iteration}/{self.sim_params['iterations']}"

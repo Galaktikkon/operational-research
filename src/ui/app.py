@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 
-from problem_initializer import ProblemInitializer
+from generator import Generator
 from ga.mutations import (
     RouteMutation,
     UnusedVehiclesMutation,
@@ -335,10 +335,22 @@ class App:
     def simulate(self):
         simulation_data = validate_form(self.simulation_form, SIMULATION_FIELDS)
 
-        popup = AnimationPopup(
-            self.root, self.problem, simulation_data, self.on_popup_close
+        generator = Generator(self.problem)
+        initial_population = generator.generate_many_feasible(
+            simulation_data["solutions"], simulation_data["attempts"]
         )
-        self.animation_popup = popup
+
+        if len(initial_population) < simulation_data["solutions"]:
+            mess = f"Found {len(initial_population)}/{simulation_data["solutions"]} solutions in {simulation_data["attempts"]} attempts."
+            messagebox.showwarning(message=mess, title="Not enough solutions found")
+        else:
+            self.animation_popup = AnimationPopup(
+                self.root,
+                self.problem,
+                simulation_data,
+                self.on_popup_close,
+                initial_population,
+            )
         self.udpate_state()
 
     def on_popup_close(self):
