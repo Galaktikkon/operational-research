@@ -363,5 +363,6 @@ class App:
             if popup.anim:
                 popup.anim.event_source.stop()
                 popup.anim = None
+            popup.on_close()
             popup.destroy()
         self.root.destroy()
