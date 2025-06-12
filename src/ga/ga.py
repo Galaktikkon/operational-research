@@ -68,7 +68,7 @@ class GA:
 
         self._cost_function_runs = 0
 
-    @functools.cache  # TODO: wplywa na _cost_function_runs
+    @functools.cache
     def get_cost(self, solution: Solution):
         """
         Calculate the cost of a solution.
