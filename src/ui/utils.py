@@ -9,11 +9,13 @@ class ValidationError(Exception):
 def get_number(text):
     try:
         number = int(text)
+        return number
     except ValueError:
-        raise ValidationError(f"Invalid number: '{text}'")
-    if number <= 0:
-        raise ValidationError(f"Number '{number}' should be positive")
-    return number
+        try:
+            number = float(text)
+            return number
+        except ValueError:
+            raise ValidationError(f"Invalid number: '{text}'")
 
 
 def set_text(entyr, text):

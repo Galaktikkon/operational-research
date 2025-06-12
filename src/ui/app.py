@@ -18,7 +18,14 @@ from .animation_popup import AnimationPopup
 
 
 PROBLEM_FIELDS = ["couriers", "vehicles", "packages"]
-SIMULATION_FIELDS = ["solutions", "attempts", "iterations"]
+SIMULATION_FIELDS = [
+    "solutions",
+    "attempts",
+    "iterations",
+    "C",
+    "alpha",
+    "animation delay",
+]
 
 
 class App:
@@ -35,11 +42,11 @@ class App:
         self.json_path = "config/base.json"
 
         self.available_mutations: list[type[Mutation]] = [
-            RouteMutation,
-            UnusedVehiclesMutation,
-            UsedVehiclesMutation,
-            PackagesMutation,
             CouriersMutation,
+            PackagesMutation,
+            RouteMutation,
+            UsedVehiclesMutation,
+            UnusedVehiclesMutation,
         ]
 
         self.status_label = tk.Label(
@@ -191,19 +198,20 @@ class App:
             "vehicles": 3,
             "packages": 20,
         }
-        return self.create_integer_form(self.problem_panel, PROBLEM_FIELDS, defaults)
+        return self.create_form(self.problem_panel, PROBLEM_FIELDS, defaults)
 
     def setup_simulation_frame(self):
         defaults = {
             "solutions": 10,
             "attempts": 1000,
             "iterations": 500,
+            "C": 1.2,
+            "alpha": 0.9,
+            "animation delay": 50,
         }
-        return self.create_integer_form(
-            self.simulation_panel, SIMULATION_FIELDS, defaults
-        )
+        return self.create_form(self.simulation_panel, SIMULATION_FIELDS, defaults)
 
-    def create_integer_form(self, frame, fields, defaults=None):
+    def create_form(self, frame, fields, defaults=None):
         entries = {}
 
         for i, field in enumerate(fields):

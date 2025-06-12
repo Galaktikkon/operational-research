@@ -99,7 +99,7 @@ class AnimationPopup(tk.Toplevel):
         self.solutions = self.generator.generate_many_feasible(
             sim_params["solutions"], sim_params["attempts"]
         )
-        self.ga = GA(problem_data, self.solutions, selected_mutations)
+        self.ga = GA(problem_data, self.solutions, sim_params["C"], sim_params["alpha"])
         self.ga_iterator = self.ga.run(max_iter=sim_params["iterations"])
 
         self.initial_best = None
@@ -117,7 +117,9 @@ class AnimationPopup(tk.Toplevel):
         self.best_canvas = None
 
         # Start animation
-        self.anim = FuncAnimation(self.fig, self.update_plot, interval=200)
+        self.anim = FuncAnimation(
+            self.fig, self.update_plot, interval=sim_params["animation delay"]
+        )
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
     def toggle_pause(self):

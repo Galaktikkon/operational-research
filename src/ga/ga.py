@@ -49,21 +49,22 @@ class GA:
         self,
         problem: Problem,
         initial_population: list[Solution],
-        mutations: list[type[Mutation]] = [
+        C,
+        alpha,
+    ):
+        self.initial_population = initial_population
+        self.mutations: list[type[Mutation]] = [
             CouriersMutation,
             UsedVehiclesMutation,
             UnusedVehiclesMutation,
             PackagesMutation,
             RouteMutation,
-        ],
-    ):
-        self.initial_population = initial_population
-        self.mutations = mutations
+        ]
         self.problem = problem
         self.checker = SolutionChecker(problem)
 
-        self.C = 1  # TODO: do configa
-        self.alpha = 0  # TODO: do configa
+        self.C = C
+        self.alpha = alpha
 
         self._cost_function_runs = 0
 
