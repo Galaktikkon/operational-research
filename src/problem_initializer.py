@@ -44,6 +44,9 @@ class ProblemInitializer:
 
     def __init__(
         self,
+        n_couriers,
+        n_vehicles,
+        n_packages,
         graph_max_coord=50,
         rate_range=(0, 100),
         work_limit_range=(int(1e10), int(1e10)),
@@ -56,6 +59,9 @@ class ProblemInitializer:
         permission_proba=1,
         pickup_delivery_proba=0.5,
     ):
+        self.n_couriers = n_couriers
+        self.n_vehicles = n_vehicles
+        self.n_packages = n_packages
         self.graph_max_coord = graph_max_coord
         self.rate_range = rate_range
         self.work_limit_range = work_limit_range
@@ -108,28 +114,17 @@ class ProblemInitializer:
         graph = problem_data["graph"]
         self.graph = Graph.from_dict(graph)
 
-    def save_to_json(self, path):
-        problem_data = {}
-        problem_data["couriers"] = [courier.to_dict() for courier in self.couriers]
-        problem_data["vehicles"] = [vehicle.to_dict() for vehicle in self.vehicles]
-        problem_data["packages"] = [package.to_dict() for package in self.packages]
-        problem_data["permissions"] = [
-            {"courier": courier, "vehicle": vehicle}
-            for courier, vehicle in self.permissions
-        ]
-        problem_data["graph"] = self.graph.to_dict()
-        with open(path, "w") as f:
-            json.dump(problem_data, f, indent=2)
+    def generate_random(self):
+        self.couriers = [self.random_courier() for _ in range(self.n_couriers)]
 
-    def generate_random(self, n_couriers, n_vehicles, n_packages):
-        self.couriers = [self.random_courier() for _ in range(n_couriers)]
-
-        self.vehicles = [self.random_vehicle() for _ in range(n_vehicles)]
+        self.vehicles = [self.random_vehicle() for _ in range(self.n_vehicles)]
 
         self.permissions = self.random_permissions()
 
-        max_address = n_packages
-        self.packages = [self.random_package(max_address) for _ in range(n_packages)]
+        max_address = self.n_packages
+        self.packages = [
+            self.random_package(max_address) for _ in range(self.n_packages)
+        ]
         addresses = np.unique([p.address for p in self.packages])
         for p in self.packages:
             p.address = np.where(p.address == addresses)[0][0] + 1

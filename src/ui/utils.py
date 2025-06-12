@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+from problem_initializer import ProblemInitializer
 
 
 class ValidationError(Exception):
@@ -32,5 +33,24 @@ def validate_form(form, fields):
             data[field] = number
     except ValidationError as e:
         messagebox.showerror("Invalid input", str(e))
-        return
+        return {}
     return data
+
+
+def create_initializer(settings: dict):
+    return ProblemInitializer(
+        settings["couriers"],
+        settings["vehicles"],
+        settings["packages"],
+        settings["max coord"],
+        (settings["rate_min"], settings["rate_max"]),
+        (settings["work limit_min"], settings["work limit_max"]),
+        (settings["capacity_min"], settings["capacity_max"]),
+        (settings["fuel_min"], settings["fuel_max"]),
+        (settings["weight_min"], settings["weight_max"]),
+        (settings["package start time_min"], settings["package start time_max"]),
+        (settings["package end time_min"], settings["package end time_max"]),
+        settings["time dist coeff"],
+        settings["permission proba"],
+        settings["pickup delivery proba"],
+    )

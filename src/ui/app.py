@@ -13,6 +13,7 @@ from ga.mutations import (
     Mutation,
 )
 
+from utils import *
 from .utils import *
 from .constans import *
 from .animation_popup import AnimationPopup
@@ -27,7 +28,6 @@ class App:
         self.root.configure(bg="#f0f0f0")
 
         self.problem = None
-        self.initializer = ProblemInitializer()
 
         self.json_path = "config/base.json"
 
@@ -56,7 +56,7 @@ class App:
 
         self.generator_panel = tk.LabelFrame(
             top_frame,
-            text="Generator Data",
+            text="Problem Generator",
             bg="#f0f0f0",
             fg="#206020",
             font=("Arial", 14, "bold"),
@@ -67,7 +67,7 @@ class App:
 
         self.simulation_panel = tk.LabelFrame(
             top_frame,
-            text="Simulation Data",
+            text="Simulation",
             bg="#f0f0f0",
             fg="#206020",
             font=("Arial", 14, "bold"),
@@ -205,7 +205,7 @@ class App:
                 bg="#f0f0f0",
             ).grid(row=i, column=0, padx=10, pady=8, sticky="e")
 
-            entry = tk.Entry(frame, font=("Arial", 12), width=8)
+            entry = tk.Entry(frame, font=("Arial", 12), width=7)
             entry.grid(row=i, column=1, pady=8)
             entry.insert(0, str(defaults.get(field, "")))
             entries[field] = entry
@@ -223,7 +223,7 @@ class App:
                 bg="#f0f0f0",
             ).grid(row=i, column=2, padx=10, pady=8, sticky="e")
 
-            entry_min = tk.Entry(frame, font=("Arial", 12), width=5)
+            entry_min = tk.Entry(frame, font=("Arial", 12), width=6)
             entry_min.grid(row=i, column=3, pady=8)
             entry_min.insert(0, str(defaults.get(f"{field}_min", "")))
 
@@ -231,7 +231,7 @@ class App:
                 row=i, column=4, padx=5
             )
 
-            entry_max = tk.Entry(frame, font=("Arial", 12), width=5)
+            entry_max = tk.Entry(frame, font=("Arial", 12), width=6)
             entry_max.grid(row=i, column=5, pady=8)
             entry_max.insert(0, str(defaults.get(f"{field}_max", "")))
 
@@ -298,7 +298,7 @@ class App:
             return
 
         try:
-            self.initializer.save_to_json(path)
+            save_to_json(self.problem, path)
             self.json_path = path
             messagebox.showinfo("Done", f"Saved the problem successfully to '{path}'")
         except (PermissionError, OSError) as e:
@@ -308,8 +308,9 @@ class App:
 
     def do_load(self, path):
         try:
-            self.initializer.load_from_json(path)
-            self.problem = self.initializer.get_problem()
+            initializer = ProblemInitializer()
+            initializer.load_from_json(path)
+            self.problem = initializer.get_problem()
             self.json_path = path
 
             self.udpate_state()
@@ -319,16 +320,12 @@ class App:
             )
 
     def generate(self):
-        generator_data = validate_form(self.generator_form, GENERATOR_FIELDS)
-        print(generator_data)
+        generator_settings = validate_form(self.generator_form, GENERATOR_FIELDS)
 
         try:
-            couriers = generator_data["couriers"]
-            vehicles = generator_data["vehicles"]
-            packages = generator_data["packages"]
-
-            self.initializer.generate_random(couriers, vehicles, packages)
-            self.problem = self.initializer.get_problem()
+            initializer = create_initializer(generator_settings)
+            initializer.generate_random()
+            self.problem = initializer.get_problem()
 
             self.udpate_state()
 

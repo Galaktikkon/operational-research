@@ -1,3 +1,4 @@
+import json
 import inspect
 import sys
 
@@ -62,3 +63,17 @@ def validate_config(config: dict, func: callable) -> bool:
             return False
 
     return True
+
+
+def save_to_json(self: Problem, path):
+    problem_data = {}
+    problem_data["couriers"] = [courier.to_dict() for courier in self.couriers]
+    problem_data["vehicles"] = [vehicle.to_dict() for vehicle in self.vehicles]
+    problem_data["packages"] = [package.to_dict() for package in self.packages]
+    problem_data["permissions"] = [
+        {"courier": courier, "vehicle": vehicle}
+        for courier, vehicle in self.permissions
+    ]
+    problem_data["graph"] = self.graph.to_dict()
+    with open(path, "w") as f:
+        json.dump(problem_data, f, indent=2)
