@@ -308,9 +308,7 @@ class App:
 
     def do_load(self, path):
         try:
-            initializer = ProblemInitializer()
-            initializer.load_from_json(path)
-            self.problem = initializer.get_problem()
+            self.problem = load_from_json(path)
             self.json_path = path
 
             self.udpate_state()

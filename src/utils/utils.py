@@ -4,7 +4,7 @@ import sys
 
 import numpy as np
 
-from model.problem import Problem
+from model import *
 
 
 def calculate_vehicle_route(problem: Problem, y_k, j):
@@ -77,3 +77,37 @@ def save_to_json(self: Problem, path):
     problem_data["graph"] = self.graph.to_dict()
     with open(path, "w") as f:
         json.dump(problem_data, f, indent=2)
+
+
+def load_from_json(json_file):
+    couriers = []
+    vehicles = []
+    permissions = []
+    packages = []
+    graph = None
+
+    with open(json_file, "r") as f:
+        problem_data = json.load(f)
+
+    for courier in problem_data["couriers"]:
+        couriers.append(Courier.from_dict(courier))
+
+    for vehicle in problem_data["vehicles"]:
+        vehicles.append(Vehicle.from_dict(vehicle))
+
+    for permission in problem_data["permissions"]:
+        permissions.append((permission["courier"], permission["vehicle"]))
+
+    for package in problem_data["packages"]:
+        packages.append(Package.from_dict(package))
+
+    graph = problem_data["graph"]
+    graph = Graph.from_dict(graph)
+
+    return Problem(
+        couriers,
+        vehicles,
+        packages,
+        permissions,
+        graph,
+    )

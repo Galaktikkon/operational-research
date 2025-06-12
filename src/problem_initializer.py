@@ -89,31 +89,6 @@ class ProblemInitializer:
             self.graph,
         )
 
-    def load_from_json(self, json_file):
-        self.couriers = []
-        self.vehicles = []
-        self.permissions = []
-        self.packages = []
-        self.graph = None
-
-        with open(json_file, "r") as f:
-            problem_data = json.load(f)
-
-        for courier in problem_data["couriers"]:
-            self.couriers.append(Courier.from_dict(courier))
-
-        for vehicle in problem_data["vehicles"]:
-            self.vehicles.append(Vehicle.from_dict(vehicle))
-
-        for permission in problem_data["permissions"]:
-            self.permissions.append((permission["courier"], permission["vehicle"]))
-
-        for package in problem_data["packages"]:
-            self.packages.append(Package.from_dict(package))
-
-        graph = problem_data["graph"]
-        self.graph = Graph.from_dict(graph)
-
     def generate_random(self):
         self.couriers = [self.random_courier() for _ in range(self.n_couriers)]
 
