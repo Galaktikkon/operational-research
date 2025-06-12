@@ -50,7 +50,9 @@ class ProblemInitializer:
             self.graph,
         )
 
-    def generate_from_json(self, json_file):
+    def load_from_json(self, json_file):
+        self.__init__()
+
         with open(json_file, "r") as f:
             problem_data = json.load(f)
 

@@ -16,6 +16,10 @@ from .utils import *
 from .animation_popup import AnimationPopup
 
 
+PROBLEM_FIELDS = ["couriers", "vehicles", "packages"]
+SIMULATION_FIELDS = ["solutions", "attempts", "iterations"]
+
+
 class App:
 
     def __init__(self, root):
@@ -24,9 +28,9 @@ class App:
         self.root.geometry("900x600")
         self.root.configure(bg="#f0f0f0")
 
-        self.problem_data = None
+        self.problem_data = {"couriers": 5, "vehicles": 3, "packages": 20}
         self.simulation_data = {}
-        self.problem_ready = False
+        self.problem = None
 
         self.initializer = ProblemInitializer()
 
@@ -67,15 +71,6 @@ class App:
         )
         self.problem_panel.grid(row=0, column=0, sticky="nsew", padx=10)
 
-        self.problem_info_label = tk.Label(
-            self.problem_panel,
-            text="No problem data",
-            font=("Arial", 12),
-            bg="#d0f0d0",
-            justify="left",
-        )
-        self.problem_info_label.pack(anchor="nw")
-
         self.simulation_panel = tk.LabelFrame(
             top_frame,
             text="Simulation Data",
@@ -86,15 +81,6 @@ class App:
             pady=15,
         )
         self.simulation_panel.grid(row=0, column=1, sticky="nsew", padx=10)
-
-        self.simulation_info_label = tk.Label(
-            self.simulation_panel,
-            text="No simulation data",
-            font=("Arial", 12),
-            bg="#d0f0d0",
-            justify="left",
-        )
-        self.simulation_info_label.pack(anchor="nw")
 
         bottom_frame = tk.Frame(root, bg="#f0f0f0")
         bottom_frame.pack(padx=10, pady=(0, 20), fill="both", expand=False)
@@ -133,24 +119,26 @@ class App:
         }
 
         buttons = [
-            ("Update Problem", self.update_problem, "normal"),
-            ("Update Simulation", self.update_simulation, "normal"),
-            ("Generate", self.generate, "disabled"),
-            ("Save", self.save, "disabled"),
             ("Load", self.load, "normal"),
+            ("Save", self.save, "normal"),
+            ("Generate", self.generate, "normal"),
             ("Simulate", self.simulate, "disabled"),
         ]
 
         btn_frame.grid_columnconfigure(0, weight=1)
+        btn_frame.grid_rowconfigure(0, weight=1)
+        btn_frame.grid_rowconfigure(1, weight=1)
         for idx, (text, cmd, state) in enumerate(buttons):
             btn = tk.Button(btn_frame, text=text, command=cmd, state=state, **btn_style)
             row = idx // 2
             col = idx % 2
-            btn.grid(row=row, column=col, padx=15, pady=10, sticky="ew")
+            btn.grid(row=row, column=col, padx=15, pady=10, sticky="")
             setattr(self, f"btn_{text.lower().replace(' ', '_')}", btn)
 
-        self.update_info_labels()
-        self.update_buttons_state()
+        self.problem_form = self.setup_problem_frame()
+        self.simulation_form = self.setup_simulation_frame()
+
+        self.udpate_state()
 
         self.animation_popups = []
         self.root.protocol("WM_DELETE_WINDOW", self.on_root_close)
@@ -181,124 +169,60 @@ class App:
             mutation_cls for var, mutation_cls in self.mutation_vars if var.get()
         ]
 
-    def update_info_labels(self):
-        if self.problem_data and hasattr(self.problem_data, "asdict"):
-            problem_summary = self.problem_data.asdict()
-            problem_text = "\n".join(
-                f"{k.capitalize()}: {v}" for k, v in problem_summary.items()
-            )
-        else:
-            problem_text = "No problem data"
+    def _problem_ready(self):
+        return self.problem is not None
 
-        self.problem_info_label.config(text=problem_text)
-
-        if self.simulation_data:
-            simulation_text = "\n".join(
-                f"{k.capitalize()}: {v}" for k, v in self.simulation_data.items()
-            )
-        else:
-            simulation_text = "No simulation data"
-
-        self.simulation_info_label.config(text=simulation_text)
-
-        if self.problem_ready:
+    def udpate_state(self):
+        if self.problem is not None:
             self.status_label.config(text="Problem loaded/generated and ready.")
         else:
             self.status_label.config(text="Problem not loaded or generated.")
 
-    def update_buttons_state(self):
-        self.btn_generate.config(state="normal" if self.problem_data else "disabled")
-        self.btn_save.config(state="normal" if self.problem_ready else "disabled")
+        self.btn_save.config(state="normal" if self._problem_ready() else "disabled")
         self.btn_simulate.config(
-            state=(
-                "normal" if self.problem_ready and self.simulation_data else "disabled"
-            )
+            state=("normal" if self._problem_ready() else "disabled")
         )
 
-    def update_problem(self):
+    def setup_problem_frame(self):
         defaults = {
-            "couriers": getattr(self.problem_data, "n_couriers", 5),
-            "vehicles": getattr(self.problem_data, "n_vehicles", 3),
-            "packages": getattr(self.problem_data, "n_packages", 20),
+            "couriers": getattr(self.problem_data, "couriers", 5),
+            "vehicles": getattr(self.problem_data, "vehicles", 3),
+            "packages": getattr(self.problem_data, "packages", 20),
         }
-        self.open_integer_form(
-            title="Update Problem",
-            fields=["couriers", "vehicles", "packages"],
-            callback=self.set_problem_data_from_form,
-            defaults=defaults,
-        )
+        return self.create_integer_form(self.problem_panel, PROBLEM_FIELDS, defaults)
 
-    def set_problem_data_from_form(self, data):
-        class DummyProblem:
-            def __init__(self, couriers, vehicles, packages):
-                self.n_couriers = couriers
-                self.n_vehicles = vehicles
-                self.n_packages = packages
+    def set_problem_data(self, data):
+        self.problem_data = data
+        self.problem = None
+        self.udpate_state()
 
-            def asdict(self):
-                return {
-                    "couriers": self.n_couriers,
-                    "vehicles": self.n_vehicles,
-                    "packages": self.n_packages,
-                }
-
-        self.problem_data = DummyProblem(
-            data["couriers"], data["vehicles"], data["packages"]
-        )
-        self.problem_ready = False
-        self.update_info_labels()
-        self.update_buttons_state()
-
-    def update_simulation(self):
+    def setup_simulation_frame(self):
         defaults = {
             "solutions": self.simulation_data.get("solutions", 10),
             "attempts": self.simulation_data.get("attempts", 1000),
             "iterations": self.simulation_data.get("iterations", 500),
         }
-        self.open_integer_form(
-            title="Update Simulation",
-            fields=["solutions", "attempts", "iterations"],
-            callback=self.set_simulation_data,
-            defaults=defaults,
+        return self.create_integer_form(
+            self.simulation_panel, SIMULATION_FIELDS, defaults
         )
 
     def set_simulation_data(self, data):
         self.simulation_data = data
-        self.update_info_labels()
-        self.update_buttons_state()
+        self.udpate_state()
 
-    def open_integer_form(self, title, fields, callback, defaults=None):
-        popup = tk.Toplevel(self.root)
-        popup.title(title)
-        popup.geometry("350x250")
-        popup.grab_set()
-        popup.configure(bg="#f0f0f0")
-
+    def create_integer_form(self, frame, fields, defaults=None):
         entries = {}
-
-        def submit():
-            data = {}
-            try:
-                for field in fields:
-                    val = entries[field].get()
-                    number = get_number(val)
-                    data[field] = number
-            except ValidationError as e:
-                messagebox.showerror("Invalid input", str(e))
-                return
-            callback(data)
-            popup.destroy()
 
         for i, field in enumerate(fields):
             tk.Label(
-                popup,
+                frame,
                 text=f"{field.capitalize()}:",
                 font=("Arial", 12),
                 bg="#f0f0f0",
             ).grid(row=i, column=0, padx=10, pady=8, sticky="e")
 
-            entry = tk.Entry(popup, font=("Arial", 12))
-            entry.grid(row=i, column=1, padx=10, pady=8)
+            entry = tk.Entry(frame, font=("Arial", 12), width=10)
+            entry.grid(row=i, column=1, pady=8)
             entries[field] = entry
 
             if defaults and field in defaults:
@@ -309,18 +233,7 @@ class App:
             if i == 0:
                 entry.focus()
 
-        submit_btn = tk.Button(
-            popup,
-            text="Submit",
-            command=submit,
-            font=("Arial", 12),
-            bg="#4caf50",
-            fg="white",
-            activebackground="#45a049",
-            relief="raised",
-            bd=3,
-        )
-        submit_btn.grid(row=len(fields), column=0, columnspan=2, pady=15)
+        return entries
 
     def save(self):
         self.open_path_popup(
@@ -375,13 +288,13 @@ class App:
         submit_btn.pack(pady=10)
 
     def do_save(self, path):
-        if not self.problem_ready:
+        if not self._problem_ready():
             messagebox.showerror("Error", "No generated or loaded problem to save.")
             return
 
         try:
             self.initializer.save_to_json(path)
-            self.json_path = path  # update path
+            self.json_path = path
             messagebox.showinfo("Done", f"Saved the problem successfully to '{path}'")
         except (PermissionError, OSError) as e:
             messagebox.showerror(
@@ -390,57 +303,45 @@ class App:
 
     def do_load(self, path):
         try:
-            self.initializer.generate_from_json(path)
-            problem = self.initializer.get_problem()
-            self.problem_data = problem
-            self.problem_ready = True
-            self.json_path = path  # update path
-            self.update_info_labels()
-            self.update_buttons_state()
-            messagebox.showinfo("Done", f"Problem loaded from '{path}'")
+            self.initializer.load_from_json(path)
+            self.problem = self.initializer.get_problem()
+            self.json_path = path
+
+            for field in PROBLEM_FIELDS:
+                entry = self.problem_form[field]
+                set_text(entry, getattr(self.problem, "n_" + field, ""))
+
+            self.udpate_state()
         except (FileNotFoundError, PermissionError, OSError, Exception) as e:
             messagebox.showerror(
                 "Error", f"Couldn't load the problem from '{path}':\n{e}"
             )
 
     def generate(self):
-        if not self.problem_data:
-            messagebox.showerror(
-                "Error",
-                "Please update the problem data first (couriers, vehicles, packages).",
-            )
-            return
+        data = validate_form(self.problem_form, PROBLEM_FIELDS)
+        self.set_problem_data(data)
 
         try:
-            couriers_num = getattr(self.problem_data, "n_couriers", None)
-            vehicles_num = getattr(self.problem_data, "n_vehicles", None)
-            packages_num = getattr(self.problem_data, "n_packages", None)
+            couriers_num = self.problem_data["couriers"]
+            vehicles_num = self.problem_data["vehicles"]
+            packages_num = self.problem_data["packages"]
 
             self.initializer.generate_random(couriers_num, vehicles_num, packages_num)
-            self.problem_data = self.initializer.get_problem()
+            self.problem = self.initializer.get_problem()
 
-            self.problem_ready = True
-            messagebox.showinfo("Done", "Problem generated successfully.")
-
-            self.update_info_labels()
-            self.update_buttons_state()
+            self.udpate_state()
 
         except Exception as e:
             messagebox.showerror("Error", f"Generation failed:\n{e}")
 
     def simulate(self):
-        if not (self.problem_ready and self.simulation_data):
-            messagebox.showerror(
-                "Error",
-                "Make sure problem is loaded/generated and simulation data is updated.",
-            )
-            return
+        data = validate_form(self.simulation_form, SIMULATION_FIELDS)
+        self.set_simulation_data(data)
 
-        # Clone and transform keys by appending '_num'
         simulation_params = {f"{k}_num": v for k, v in self.simulation_data.items()}
 
         popup = AnimationPopup(
-            self.root, self.problem_data, simulation_params, self.selected_mutations
+            self.root, self.problem, simulation_params, self.selected_mutations
         )
         self.animation_popups.append(popup)
 
