@@ -347,7 +347,7 @@ class App:
         ).pack(pady=15)
 
         entry = tk.Entry(popup, font=("Arial", 12), width=40)
-        entry.pack(pady=5)
+        entry.pack(pady=5, padx=10)
         entry.focus()
 
         if default_path:
