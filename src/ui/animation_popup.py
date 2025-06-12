@@ -4,22 +4,93 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+from ga.mutations import *
 from generator import Generator
 from ga import GA
 from .utils import *
 
 
 class AnimationPopup(tk.Toplevel):
-    def __init__(self, master, problem_data, sim_params, selected_mutations):
+    def __init__(self, master, problem, sim_params, on_popup_close):
         super().__init__(master)
+        self.root = master
         self.title("Simulation Animation")
-        self.geometry("1400x800")
+        self.geometry("1400x700")
 
-        # Frame for buttons (Pause + Show Best side by side)
-        self.button_frame = tk.Frame(self)
-        self.button_frame.pack(pady=5)
+        self.problem = problem
+        self.on_popup_close = on_popup_close
 
-        # Pause/Resume Button
+        self.fig, self.axes = plt.subplots(1, 3, figsize=(16, 2))
+        self.fig.tight_layout()
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self)
+        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+        self.bottom_frame = tk.Frame(self)
+        self.bottom_frame.pack(pady=20, fill="x")
+
+        self.mutations_frame = tk.Frame(self.bottom_frame)
+        self.mutations_frame.pack(side="left", expand=True)
+
+        mutations: list[type[Mutation]] = [
+            CouriersMutation,
+            UsedVehiclesMutation,
+            UnusedVehiclesMutation,
+            PackagesMutation,
+            RouteMutation,
+        ]
+
+        self.popups = []
+        self.labels = {}
+
+        mutation_info = [f"Crossovers"]
+        for m in mutations:
+            m.times_feasible_created = 0
+            m.times_run = 0
+            mutation_info.append(f"{m.__name__}")
+
+        for r, i in enumerate(mutation_info):
+            tk.Label(
+                self.mutations_frame, text=i + ":", font=("Arial", 12, "bold")
+            ).grid(row=r, column=0, sticky="w")
+            l = tk.Label(self.mutations_frame, text="0/0", font=("Arial", 12, "bold"))
+            l.grid(row=r, column=1, sticky="e")
+            self.labels[i] = l
+
+        self.info_frame = tk.Frame(self.bottom_frame)
+        self.info_frame.pack(side="left", expand=True)
+
+        stats = [
+            "Iterations",
+            "Improvements",
+            "Best found in",
+        ]
+        for r, i in enumerate(stats):
+            tk.Label(self.info_frame, text=i + ":", font=("Arial", 12, "bold")).grid(
+                row=r, column=0, sticky="w"
+            )
+            l = tk.Label(self.info_frame, text="0/0", font=("Arial", 12, "bold"))
+            l.grid(row=r, column=1, sticky="e")
+            self.labels[i] = l
+
+        self.legend_frame = tk.Frame(self.bottom_frame)
+        self.legend_frame.pack(side="left", expand=True)
+
+        for j in range(problem.n_vehicles):
+            canvas = tk.Canvas(self.legend_frame, width=12, height=12)
+            color = get_mpl_color(j)
+            canvas.create_oval(1, 1, 11, 11, fill=color, outline=color)
+            canvas.grid(row=j, column=0, sticky="w")
+            tk.Label(self.legend_frame, text=f"Vehicle {j}", font=("Arial", 12)).grid(
+                row=j, column=1, sticky="e"
+            )
+
+        self.button_frame = tk.Frame(self.bottom_frame)
+        self.button_frame.pack(side="left", expand=True)
+        self.button_frame.grid_rowconfigure(0, weight=1)
+        self.button_frame.grid_rowconfigure(1, weight=1)
+        self.button_frame.grid_rowconfigure(2, weight=1)
+        self.button_frame.grid_columnconfigure(0, weight=1)
+
         self.is_paused = False
         self.pause_btn = tk.Button(
             self.button_frame,
@@ -32,9 +103,8 @@ class AnimationPopup(tk.Toplevel):
             width=10,
             command=self.toggle_pause,
         )
-        self.pause_btn.pack(side=tk.LEFT, padx=5)
+        self.pause_btn.grid(row=0, column=0, padx=5)
 
-        # Show Best button (starts disabled)
         self.show_best_btn = tk.Button(
             self.button_frame,
             text="Show Best",
@@ -45,61 +115,28 @@ class AnimationPopup(tk.Toplevel):
             bd=3,
             width=10,
             command=self.show_best_solution,
-            state=tk.DISABLED,
         )
-        self.show_best_btn.pack(side=tk.LEFT, padx=5)
+        self.show_best_btn.grid(row=1, column=0, padx=5)
 
-        # Back to Simulation button (hidden initially)
-        self.back_to_sim_btn = tk.Button(
+        self.show_problem_btn = tk.Button(
             self.button_frame,
-            text="Back to Simulation",
+            text="Show Problem",
             font=("Arial", 12, "bold"),
-            bg="#4caf50",
+            bg="#2196f3",
             fg="white",
             relief="raised",
             bd=3,
-            width=16,
-            command=self.back_to_simulation,
+            width=10,
+            command=self.show_problem,
         )
-        self.back_to_sim_btn.pack_forget()
-
-        # Setup matplotlib figure and canvas
-        self.fig, self.axes = plt.subplots(2, 3, figsize=(12, 4))
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self)
-        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-
-        # Frame to hold best solution info and repr widget (split into two columns)
-        self.best_view_frame = tk.Frame(self)
-        self.best_view_frame.pack_forget()
-
-        # Left side: plot and info box container
-        self.left_best_frame = tk.Frame(self.best_view_frame)
-        self.left_best_frame.pack(
-            side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=5
-        )
-
-        # Right side: repr text widget + scrollbar
-        self.right_best_frame = tk.Frame(self.best_view_frame)
-        self.right_best_frame.pack(
-            side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=5
-        )
-
-        self.repr_text = tk.Text(self.right_best_frame, wrap="none")
-        self.repr_text.config(state=tk.DISABLED, width=60, height=25)
-        self.repr_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-        self.scrollbar_vert = tk.Scrollbar(
-            self.right_best_frame, orient=tk.VERTICAL, command=self.repr_text.yview
-        )
-        self.repr_text["yscrollcommand"] = self.scrollbar_vert.set
-        self.scrollbar_vert.pack(side=tk.RIGHT, fill=tk.Y)
+        self.show_problem_btn.grid(row=2, column=0, padx=5)
 
         # Setup GA & generator (assuming these are given or imported)
-        self.generator = Generator(problem_data)
+        self.generator = Generator(problem)
         self.solutions = self.generator.generate_many_feasible(
             sim_params["solutions"], sim_params["attempts"]
         )
-        self.ga = GA(problem_data, self.solutions, sim_params["C"], sim_params["alpha"])
+        self.ga = GA(problem, self.solutions, sim_params["C"], sim_params["alpha"])
         self.ga_iterator = self.ga.run(max_iter=sim_params["iterations"])
 
         self.initial_best = None
@@ -108,7 +145,6 @@ class AnimationPopup(tk.Toplevel):
         self.improvements = 0
         self.sim_params = sim_params
         self.best_found_iteration = 0
-        self.selected_mutations = selected_mutations
 
         self.showing_best = False
 
@@ -126,11 +162,9 @@ class AnimationPopup(tk.Toplevel):
         if self.is_paused:
             self.anim.event_source.start()
             self.pause_btn.config(text="Pause", bg="#ff9800")
-            self.show_best_btn.config(state=tk.DISABLED)
         else:
             self.anim.event_source.stop()
             self.pause_btn.config(text="Resume", bg="#4caf50")
-            self.show_best_btn.config(state=tk.NORMAL)
         self.is_paused = not self.is_paused
 
     def on_close(self):
@@ -146,33 +180,15 @@ class AnimationPopup(tk.Toplevel):
             plt.close(self.best_fig)
             self.best_fig = None
 
+        for p in self.popups:
+            p.destroy()
+
         self.canvas.get_tk_widget().destroy()
         plt.close(self.fig)
         self.destroy()
+        self.on_popup_close()
 
-    def draw_solution_to_axis(self, solution, axis):
-        points = solution.problem.graph.points.T
-        axis.scatter(points[0], points[1], s=60)
-
-        w = solution.problem.graph.warehouse
-        axis.scatter(points[0][w], points[1][w], s=65, c="red")
-
-        for j in range(solution.problem.n_vehicles):
-            for u, v in zip(solution.x_jv[j], solution.x_jv[j, 1:]):
-                axis.arrow(
-                    *points[:, u],
-                    *(points[:, v] - points[:, u]),
-                    color=f"C{j}",
-                    head_width=0.6,
-                    length_includes_head=True,
-                )
-                if v == solution.problem.graph.warehouse:
-                    break
-
-        for i in range(points.shape[1]):
-            axis.annotate(f"{i}", (points[0][i], points[1][i]))
-
-    def update_plot(self, frame):
+    def update_plot(self, _):
         if self.showing_best:
             return
 
@@ -185,175 +201,76 @@ class AnimationPopup(tk.Toplevel):
         if self.initial_best is None:
             self.initial_best = state.solution
             self.current_best = state.solution
+
+            draw_solution_to_axis(self.initial_best, self.axes[0])
+            self.axes[0].set(
+                title=f"Initial, cost={self.ga.get_cost(self.initial_best):.2f}"
+            )
         elif self.ga.get_cost(state.solution) < self.ga.get_cost(self.current_best):
             self.current_best = state.solution
+
+            if hasattr(self, "best_text") and self.best_text.winfo_exists():
+                self.best_text.config(state=tk.NORMAL)
+                self.best_text.delete("1.0", tk.END)
+                self.best_text.insert(tk.END, repr(self.current_best))
+                self.best_text.config(state=tk.DISABLED)
+
             self.improvements += 1
             self.best_found_iteration = self.iteration
 
-        # Clear all axes first
-        for ax in self.axes.flatten():
-            ax.clear()
-            ax.axis("on")  # Make sure axes are visible (for plots)
+        self.axes[1].clear()
 
-        # Draw the three top plots
-        self.draw_solution_to_axis(self.initial_best, self.axes[0, 0])
-        self.axes[0, 0].set(
-            title=f"Initial, cost={self.ga.get_cost(self.initial_best):.2f}"
+        draw_solution_to_axis(state.solution, self.axes[1])
+        self.axes[1].set(
+            title=f"Current best, cost={self.ga.get_cost(state.solution):.2f}"
         )
 
-        self.draw_solution_to_axis(state.solution, self.axes[0, 1])
-        self.axes[0, 1].set(
-            title=f"Current, cost={self.ga.get_cost(state.solution):.2f}"
-        )
+        iter_text = f"{self.iteration}/{self.sim_params['iterations']}"
+        self.labels["Iterations"].config(text=iter_text)
+        self.labels["Improvements"].config(text=f"{self.improvements}")
+        self.labels["Best found in"].config(text=f"{self.best_found_iteration}")
 
-        self.draw_solution_to_axis(self.current_best, self.axes[0, 2])
-        self.axes[0, 2].set(
-            title=f"Best, cost={self.ga.get_cost(self.current_best):.2f}"
-        )
-
-        # Prepare the info text blocks
-        iteration_info = [
-            f"Iterations: {self.iteration}/{self.sim_params['iterations']}",
-            f"Solutions' population: {self.sim_params['solutions']}",
-            f"Attempts: {self.sim_params['attempts']}",
-            f"Improvements: {self.improvements}",
-            f"Best solution found in: {self.best_found_iteration}",
-        ]
-
-        mutation_info = [f"Crossovers: {state.crossok}/{state.crossall}"]
+        self.labels["Crossovers"].config(text=f"{state.crossok}/{state.crossall}")
         for m in state.mutations:
-            mutation_info.append(
-                f"{m.__name__}: {m.times_feasible_created}/{m.times_run}"
+            self.labels[m.__name__].config(
+                text=f"{m.times_feasible_created}/{m.times_run}"
             )
-
-        # Clear bottom row axes and hide axis lines for text boxes
-        for ax in self.axes[1]:
-            ax.clear()
-            ax.axis("off")
-
-        # Put iteration info in bottom-left
-        self.axes[1, 0].text(
-            0.5,
-            0.5,
-            "\n".join(iteration_info),
-            ha="center",
-            va="center",
-            fontsize=11,
-            linespacing=1.6,
-            wrap=True,
-            bbox=dict(
-                boxstyle="round,pad=1",
-                facecolor="#f0f8ff",
-                edgecolor="#888888",
-                linewidth=2,
-                alpha=0.95,
-            ),
-        )
-
-        # Put mutation/crossover info in bottom-middle
-        self.axes[1, 1].text(
-            0.5,
-            0.5,
-            "\n".join(mutation_info),
-            ha="center",
-            va="center",
-            fontsize=11,
-            linespacing=1.6,
-            wrap=True,
-            bbox=dict(
-                boxstyle="round,pad=1",
-                facecolor="#f0f8ff",
-                edgecolor="#888888",
-                linewidth=2,
-                alpha=0.95,
-            ),
-        )
-
-        # Hide bottom-right axis completely
-        self.axes[1, 2].set_visible(False)
 
         # Redraw canvas
         self.canvas.draw()
         self.iteration += 1
 
+    def create_text_popup(self, title, text):
+        popup = tk.Toplevel(self.root)
+        popup.title(title)
+        popup.geometry("1024x768")
+        popup.configure(bg="#f0f0f0")
+
+        text_frame = tk.Frame(popup)
+        text_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        repr_text = tk.Text(text_frame, wrap="none")
+        repr_text.config(state=tk.DISABLED, width=60, height=20)
+        repr_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        scrollbar_vert = tk.Scrollbar(
+            text_frame, orient=tk.VERTICAL, command=repr_text.yview
+        )
+        repr_text["yscrollcommand"] = scrollbar_vert.set
+        scrollbar_vert.pack(side=tk.RIGHT, fill=tk.Y)
+
+        repr_text.config(state=tk.NORMAL)
+        repr_text.delete("1.0", tk.END)
+        repr_text.insert(tk.END, text)
+        repr_text.config(state=tk.DISABLED)
+
+        self.popups.append(popup)
+        return repr_text
+
     def show_best_solution(self):
-        self.anim.event_source.stop()
-        self.showing_best = True
-
-        self.pause_btn.pack_forget()
-        self.show_best_btn.pack_forget()
-        self.back_to_sim_btn.pack(side=tk.LEFT, padx=5)
-
-        self.canvas.get_tk_widget().pack_forget()
-
-        self.best_view_frame.pack(fill=tk.BOTH, expand=True)
-
-        for widget in self.left_best_frame.winfo_children():
-            widget.destroy()
-
-        # Create and store figure and canvas for best solution
-        fig_best, ax_best = plt.subplots(figsize=(6, 4))
-        self.best_fig = fig_best
-        self.best_canvas = FigureCanvasTkAgg(fig_best, master=self.left_best_frame)
-
-        self.draw_solution_to_axis(self.current_best, ax_best)
-        ax_best.set(
-            title=f"Best Solution\nCost: {self.ga.get_cost(self.current_best):.2f}"
+        self.best_text = self.create_text_popup(
+            "Best Solution", repr(self.current_best) if self.current_best else ""
         )
-        fig_best.tight_layout()
 
-        self.best_canvas.draw()
-        self.best_canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-
-        info_text = "\n".join(
-            [
-                f"Iterations run: {self.iteration - 1}",
-                f"Improvements: {self.improvements}",
-                f"Best found at iteration: {self.best_found_iteration}",
-                f"Final cost: {self.ga.get_cost(self.current_best):.2f}",
-            ]
-        )
-        info_box = tk.Label(
-            self.left_best_frame,
-            text=info_text,
-            bg="#e3f2fd",
-            font=("Arial", 11),
-            justify=tk.LEFT,
-            anchor="nw",
-            relief=tk.SOLID,
-            bd=1,
-            padx=10,
-            pady=5,
-        )
-        info_box.pack(fill=tk.X, pady=10)
-
-        self.repr_text.config(state=tk.NORMAL)
-        self.repr_text.delete("1.0", tk.END)
-        self.repr_text.insert(tk.END, repr(self.current_best))
-        self.repr_text.config(state=tk.DISABLED)
-
-    def back_to_simulation(self):
-        self.best_view_frame.pack_forget()
-
-        # Destroy best solution figure and canvas properly
-        if self.best_canvas:
-            self.best_canvas.get_tk_widget().pack_forget()
-            self.best_canvas.get_tk_widget().destroy()
-            self.best_canvas = None
-
-        if self.best_fig:
-            plt.close(self.best_fig)
-            self.best_fig = None
-
-        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-
-        self.back_to_sim_btn.pack_forget()
-        self.pause_btn.pack(side=tk.LEFT, padx=5)
-        self.show_best_btn.pack(side=tk.LEFT, padx=5)
-
-        # Do not resume animation automatically
-        self.is_paused = True
-        self.pause_btn.config(text="Resume", bg="#4caf50")
-        self.show_best_btn.config(state=tk.NORMAL)
-
-        self.showing_best = False
+    def show_problem(self):
+        self.create_text_popup("Problem Description", repr(self.problem))

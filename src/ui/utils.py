@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from problem_initializer import ProblemInitializer
+import matplotlib.pyplot as plt
 
 
 class ValidationError(Exception):
@@ -19,9 +20,9 @@ def get_number(text):
             raise ValidationError(f"Invalid number: '{text}'")
 
 
-def set_text(entyr, text):
-    entyr.delete(0, tk.END)
-    entyr.insert(0, text)
+def set_text(entry, text):
+    entry.delete(0, tk.END)
+    entry.insert(0, text)
 
 
 def validate_form(form, fields):
@@ -54,3 +55,31 @@ def create_initializer(settings: dict):
         settings["permission proba"],
         settings["pickup delivery proba"],
     )
+
+
+def draw_solution_to_axis(solution, axis):
+    points = solution.problem.graph.points.T
+    axis.scatter(points[0], points[1], s=60)
+
+    w = solution.problem.graph.warehouse
+    axis.scatter(points[0][w], points[1][w], s=65, c="red")
+
+    for j in range(solution.problem.n_vehicles):
+        for u, v in zip(solution.x_jv[j], solution.x_jv[j, 1:]):
+            axis.arrow(
+                *points[:, u],
+                *(points[:, v] - points[:, u]),
+                color=f"C{j}",
+                head_width=0.6,
+                length_includes_head=True,
+            )
+            if v == solution.problem.graph.warehouse:
+                break
+
+    for i in range(points.shape[1]):
+        axis.annotate(f"{i}", (points[0][i], points[1][i]))
+
+
+def get_mpl_color(i):
+    colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    return colors[i % len(colors)]

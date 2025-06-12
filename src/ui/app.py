@@ -24,7 +24,7 @@ class App:
     def __init__(self, root):
         self.root = root
         self.root.title("Main Window")
-        self.root.geometry("1000x600")
+        self.root.geometry("1000x640")
         self.root.configure(bg="#f0f0f0")
 
         self.problem = None
@@ -134,7 +134,7 @@ class App:
 
         self.udpate_state()
 
-        self.animation_popups = []
+        self.animation_popup = None
         self.root.protocol("WM_DELETE_WINDOW", self.on_root_close)
 
     def create_mutation_inputs(self):
@@ -179,7 +179,11 @@ class App:
 
         self.btn_save.config(state="normal" if self._problem_ready() else "disabled")
         self.btn_simulate.config(
-            state=("normal" if self._problem_ready() else "disabled")
+            state=(
+                "normal"
+                if self._problem_ready() and self.animation_popup is None
+                else "disabled"
+            )
         )
 
     def setup_generator_frame(self):
@@ -203,10 +207,10 @@ class App:
                 text=f"{field.capitalize()}:",
                 font=("Arial", 12),
                 bg="#f0f0f0",
-            ).grid(row=i, column=0, padx=10, pady=8, sticky="e")
+            ).grid(row=i, column=0, padx=10, pady=8, sticky="w")
 
             entry = tk.Entry(frame, font=("Arial", 12), width=7)
-            entry.grid(row=i, column=1, pady=8)
+            entry.grid(row=i, column=1, pady=8, sticky="e")
             entry.insert(0, str(defaults.get(field, "")))
             entries[field] = entry
 
@@ -221,10 +225,10 @@ class App:
                 text=f"{field.capitalize()}:",
                 font=("Arial", 12),
                 bg="#f0f0f0",
-            ).grid(row=i, column=2, padx=10, pady=8, sticky="e")
+            ).grid(row=i, column=2, padx=(20, 10), pady=8, sticky="w")
 
             entry_min = tk.Entry(frame, font=("Arial", 12), width=6)
-            entry_min.grid(row=i, column=3, pady=8)
+            entry_min.grid(row=i, column=3, pady=8, sticky="e")
             entry_min.insert(0, str(defaults.get(f"{field}_min", "")))
 
             tk.Label(frame, text="-", font=("Arial", 12), bg="#f0f0f0").grid(
@@ -332,19 +336,22 @@ class App:
 
     def simulate(self):
         simulation_data = validate_form(self.simulation_form, SIMULATION_FIELDS)
-        self.udpate_state()
 
         popup = AnimationPopup(
-            self.root, self.problem, simulation_data, self.available_mutations
+            self.root, self.problem, simulation_data, self.on_popup_close
         )
-        self.animation_popups.append(popup)
+        self.animation_popup = popup
+        self.udpate_state()
+
+    def on_popup_close(self):
+        self.animation_popup = None
+        self.udpate_state()
 
     def on_root_close(self):
-        for popup in self.animation_popups:
-            if popup.winfo_exists():
-                if popup.anim:
-                    popup.anim.event_source.stop()
-                    popup.anim = None
-                popup.destroy()
-        self.animation_popups.clear()
+        popup = self.animation_popup
+        if popup is not None and popup.winfo_exists():
+            if popup.anim:
+                popup.anim.event_source.stop()
+                popup.anim = None
+            popup.destroy()
         self.root.destroy()
