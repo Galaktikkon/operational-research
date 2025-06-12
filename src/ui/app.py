@@ -28,9 +28,7 @@ class App:
         self.root.geometry("900x600")
         self.root.configure(bg="#f0f0f0")
 
-        self.problem_data = {"couriers": 5, "vehicles": 3, "packages": 20}
         self.problem = None
-
         self.initializer = ProblemInitializer()
 
         self.json_path = "config/base.json"
@@ -184,16 +182,11 @@ class App:
 
     def setup_problem_frame(self):
         defaults = {
-            "couriers": getattr(self.problem_data, "couriers", 5),
-            "vehicles": getattr(self.problem_data, "vehicles", 3),
-            "packages": getattr(self.problem_data, "packages", 20),
+            "couriers": 5,
+            "vehicles": 3,
+            "packages": 20,
         }
         return self.create_integer_form(self.problem_panel, PROBLEM_FIELDS, defaults)
-
-    def set_problem_data(self, data):
-        self.problem_data = data
-        self.problem = None
-        self.udpate_state()
 
     def setup_simulation_frame(self):
         defaults = {
@@ -313,13 +306,12 @@ class App:
             )
 
     def generate(self):
-        data = validate_form(self.problem_form, PROBLEM_FIELDS)
-        self.set_problem_data(data)
+        problem_data = validate_form(self.problem_form, PROBLEM_FIELDS)
 
         try:
-            couriers = self.problem_data["couriers"]
-            vehicles = self.problem_data["vehicles"]
-            packages = self.problem_data["packages"]
+            couriers = problem_data["couriers"]
+            vehicles = problem_data["vehicles"]
+            packages = problem_data["packages"]
 
             self.initializer.generate_random(couriers, vehicles, packages)
             self.problem = self.initializer.get_problem()
