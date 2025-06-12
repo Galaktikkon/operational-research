@@ -1,3 +1,5 @@
+import re
+
 import tkinter as tk
 from tkinter import messagebox
 
@@ -28,7 +30,7 @@ class App:
 
         self.initializer = ProblemInitializer()
 
-        self.json_path = "config/base.json"  # default path
+        self.json_path = "config/base.json"
 
         self.available_mutations = [
             RouteMutation,
@@ -48,42 +50,42 @@ class App:
         )
         self.status_label.pack(pady=10)
 
-        # Frame to hold the top two panels side by side
         top_frame = tk.Frame(root, bg="#f0f0f0")
-        top_frame.pack(padx=10, pady=10, fill="both", expand=False)
+        top_frame.pack(padx=10, pady=(0, 10), fill="both", expand=True)
+        top_frame.grid_columnconfigure(0, weight=1)
+        top_frame.grid_columnconfigure(1, weight=1)
+        top_frame.grid_rowconfigure(0, weight=1)
 
-        # Problem Data Panel (left)
         self.problem_panel = tk.LabelFrame(
             top_frame,
             text="Problem Data",
-            bg="#d0f0d0",
+            bg="#f0f0f0",
             fg="#206020",
             font=("Arial", 14, "bold"),
             padx=15,
             pady=15,
         )
-        self.problem_panel.pack(side="left", expand=True, fill="both", padx=10)
+        self.problem_panel.grid(row=0, column=0, sticky="nsew", padx=10)
 
         self.problem_info_label = tk.Label(
             self.problem_panel,
             text="No problem data",
             font=("Arial", 12),
-            bg="#d0f0d0",  # match panel bg color here
+            bg="#d0f0d0",
             justify="left",
         )
         self.problem_info_label.pack(anchor="nw")
 
-        # Simulation Data Panel (right)
         self.simulation_panel = tk.LabelFrame(
             top_frame,
             text="Simulation Data",
-            bg="#d0f0d0",
+            bg="#f0f0f0",
             fg="#206020",
             font=("Arial", 14, "bold"),
             padx=15,
             pady=15,
         )
-        self.simulation_panel.pack(side="left", expand=True, fill="both", padx=10)
+        self.simulation_panel.grid(row=0, column=1, sticky="nsew", padx=10)
 
         self.simulation_info_label = tk.Label(
             self.simulation_panel,
@@ -94,9 +96,11 @@ class App:
         )
         self.simulation_info_label.pack(anchor="nw")
 
-        # Frame for mutation checkboxes row (full width below top_frame)
-        mutations_frame = tk.LabelFrame(
-            root,
+        bottom_frame = tk.Frame(root, bg="#f0f0f0")
+        bottom_frame.pack(padx=10, pady=(0, 20), fill="both", expand=False)
+
+        self.mutations_frame = tk.LabelFrame(
+            bottom_frame,
             text="Mutations",
             bg="#f0f0f0",
             fg="#206020",
@@ -104,14 +108,19 @@ class App:
             padx=15,
             pady=15,
         )
-        mutations_frame.pack(padx=10, pady=(0, 20), fill="x")
-
-        self.mutations_frame = mutations_frame
+        self.mutations_frame.pack(side="left", expand=True, fill="both", padx=10)
         self.create_mutation_checkboxes()
 
-        # Buttons frame at bottom, two columns
-        btn_frame = tk.Frame(root, bg="#f0f0f0")
-        btn_frame.pack(pady=10)
+        btn_frame = tk.LabelFrame(
+            bottom_frame,
+            text="Actions",
+            bg="#f0f0f0",
+            fg="#206020",
+            font=("Arial", 14, "bold"),
+            padx=15,
+            pady=15,
+        )
+        btn_frame.pack(side="left", expand=True, fill="both", padx=10)
 
         btn_style = {
             "width": 20,
@@ -132,11 +141,12 @@ class App:
             ("Simulate", self.simulate, "disabled"),
         ]
 
+        btn_frame.grid_columnconfigure(0, weight=1)
         for idx, (text, cmd, state) in enumerate(buttons):
             btn = tk.Button(btn_frame, text=text, command=cmd, state=state, **btn_style)
             row = idx // 2
             col = idx % 2
-            btn.grid(row=row, column=col, padx=15, pady=10)
+            btn.grid(row=row, column=col, padx=15, pady=10, sticky="ew")
             setattr(self, f"btn_{text.lower().replace(' ', '_')}", btn)
 
         self.update_info_labels()
@@ -152,7 +162,7 @@ class App:
             var = tk.BooleanVar(value=False)
             chk = tk.Checkbutton(
                 self.mutations_frame,  # updated from self.mutations_panel
-                text=mutation_cls.__name__,
+                text=re.sub("([a-z])([A-Z])", r"\1 \2", mutation_cls.__name__),
                 variable=var,
                 bg="#f0f0f0",
                 font=("Arial", 11),
@@ -161,8 +171,8 @@ class App:
                 command=self.update_selected_mutations,
             )
             # Grid layout: 3 columns
-            row = idx // 3
-            col = idx % 3
+            row = idx // 1
+            col = idx % 1
             chk.grid(row=row, column=col, sticky="w", padx=5, pady=5)
             self.mutation_vars.append((var, mutation_cls))
 
