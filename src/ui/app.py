@@ -337,11 +337,11 @@ class App:
 
         generator = Generator(self.problem)
         initial_population = generator.generate_many_feasible(
-            simulation_data["solutions"], simulation_data["attempts"]
+            simulation_data["initial population"], simulation_data["attempts"]
         )
 
-        if len(initial_population) < simulation_data["solutions"]:
-            mess = f"Found {len(initial_population)}/{simulation_data["solutions"]} solutions in {simulation_data["attempts"]} attempts."
+        if len(initial_population) < simulation_data["initial population"]:
+            mess = f"Found {len(initial_population)}/{simulation_data["initial population"]} solutions in {simulation_data["attempts"]} attempts."
             messagebox.showwarning(message=mess, title="Not enough solutions found")
         else:
             self.animation_popup = AnimationPopup(

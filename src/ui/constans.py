@@ -25,7 +25,7 @@ GENERATOR_RANGE_DEFAULTS = {
     "package end time_max": 100,
 }
 SIMULATION_DEFAULTS = {
-    "solutions": 10,
+    "initial population": 10,
     "attempts": 1000,
     "iterations": 500,
     "C": 1.2,
@@ -59,7 +59,7 @@ GENERATOR_FIELDS = (
 )
 
 SIMULATION_FIELDS = [
-    "solutions",
+    "initial population",
     "attempts",
     "iterations",
     "C",
