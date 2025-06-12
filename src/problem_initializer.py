@@ -6,7 +6,9 @@ from model import Graph
 from model.input import Courier, Package, Vehicle
 from model.problem import Problem
 
-# TODO: dodać rzeczy do configa
+
+def randf(start, end):
+    return np.random.rand() * (end - start) + start
 
 
 class ProblemInitializer:
@@ -34,7 +36,32 @@ class ProblemInitializer:
             Generates a random graph with nodes and edges.
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+        graph_max_coord=50,
+        rate_range=(0, 100),
+        work_limit_range=(int(1e10), int(1e10)),
+        capacity_range=(int(1e10), int(1e10)),
+        fuel_range=(0, 20),
+        weight_range=(0, 10),
+        package_start_time_range=(0, 0),
+        package_end_time_range=(int(1e10), int(1e10)),
+        time_dist_coeff=0.5,
+        permission_proba=1,
+        pickup_delivery_proba=0.5,
+    ):
+        self.graph_max_coord = graph_max_coord
+        self.rate_range = rate_range
+        self.work_limit_range = work_limit_range
+        self.capacity_range = capacity_range
+        self.fuel_range = fuel_range
+        self.weight_range = weight_range
+        self.package_start_time_range = package_start_time_range
+        self.package_end_time_range = package_end_time_range
+        self.time_dist_coeff = time_dist_coeff
+        self.permission_proba = permission_proba
+        self.pickup_delivery_proba = pickup_delivery_proba
+
         self.couriers = []
         self.vehicles = []
         self.permissions = []
@@ -51,7 +78,11 @@ class ProblemInitializer:
         )
 
     def load_from_json(self, json_file):
-        self.__init__()
+        self.couriers = []
+        self.vehicles = []
+        self.permissions = []
+        self.packages = []
+        self.graph = None
 
         with open(json_file, "r") as f:
             problem_data = json.load(f)
@@ -89,7 +120,7 @@ class ProblemInitializer:
 
         self.vehicles = [self.random_vehicle() for _ in range(n_vehicles)]
 
-        self.permissions = self.random_permissions(1)
+        self.permissions = self.random_permissions()
 
         max_address = n_packages
         self.packages = [self.random_package(max_address) for _ in range(n_packages)]
@@ -97,7 +128,7 @@ class ProblemInitializer:
         for p in self.packages:
             p.address = np.where(p.address == addresses)[0][0] + 1
 
-        self.graph = self.random_graph(len(addresses) + 1, max_coord=50)
+        self.graph = self.random_graph(len(addresses) + 1)
 
     def random_courier(self):
         """
@@ -107,8 +138,8 @@ class ProblemInitializer:
         -------
             Courier: A courier object with random rate and work limit.
         """
-        rate = np.random.randint(100)
-        work_limit = 1e10  # 8  # np.random.randint(4, 9)
+        rate = np.random.randint(*self.rate_range)
+        work_limit = np.random.randint(*self.work_limit_range)
         return Courier(rate, work_limit * 60)
 
     def random_vehicle(self):
@@ -119,11 +150,11 @@ class ProblemInitializer:
         -------
             Vehicle: A vehicle object with random capacity and fuel.
         """
-        capacity = 1e10  # np.random.randint(10, 100)
-        fuel = np.round(np.random.rand() * 20, 2)
+        capacity = np.random.randint(*self.capacity_range)
+        fuel = np.round(randf(*self.fuel_range), 2)
         return Vehicle(capacity, fuel)
 
-    def random_permissions(self, permission_proba):
+    def random_permissions(self):
         """
         Generate random permissions for couriers and vehicles.
 
@@ -141,7 +172,7 @@ class ProblemInitializer:
             (i, j)
             for i in range(n)
             for j in range(m)
-            if np.random.rand() <= permission_proba
+            if np.random.rand() <= self.permission_proba
         ]
 
     def random_package(self, max_address):
@@ -159,34 +190,33 @@ class ProblemInitializer:
 
         address = np.random.randint(max_address)
 
-        weight = np.round(np.random.rand() * 10, 2)
-        start_time = 0  # np.random.randint(1, 2) * 60
-        end_time = 1e10  # 8 * 60  # np.random.randint(5, 9) * 60
-        type = "pickup" if np.random.randint(2) else "delivery"
+        weight = np.round(randf(*self.weight_range), 2)
+        start_time = np.random.randint(*self.package_start_time_range) * 60
+        end_time = np.random.randint(*self.package_end_time_range) * 60
+        type = "pickup" if np.random.rand() < self.pickup_delivery_proba else "delivery"
 
         return Package(address, weight, start_time, end_time, type)
 
-    def random_graph(self, n_nodes, max_coord=100):
+    def random_graph(self, n_nodes):
         """
         Generate a random graph with nodes and edges.
 
         Args
         ----
             n_nodes (int): Number of nodes in the graph.
-            max_coord (int): Maximum coordinate value for the nodes.
 
         Returns
         -------
             Graph: A graph object with nodes and edges.
         """
-        points = np.random.uniform(0, max_coord, (n_nodes, 2))
+        points = np.random.uniform(0, self.graph_max_coord, (n_nodes, 2))
 
         routes = []
 
         for i, (x, y) in enumerate(points):
             for j, (a, b) in enumerate(points[i + 1 :], start=i + 1):
                 dist = np.round(np.sqrt((a - x) ** 2 + (b - y) ** 2), 2)
-                time = dist  # np.round(dist * (0.5 + np.random.rand()), 2)
+                time = np.round(dist * (1 - self.time_dist_coeff + np.random.rand()), 2)
 
                 routes.append((i, j, dist, time))
 

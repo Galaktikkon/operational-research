@@ -52,6 +52,9 @@ class Problem:
 
         self._calc_s_uv_g_uv()
 
+    def info(self):
+        return f"Problem(couriers={self.n_couriers}, vehicles={self.n_vehicles}, packages={self.n_packages}, graph_nodes={self.n_nodes})"
+
     def __repr__(self):
         rows = (
             ["Couriers"]

@@ -17,7 +17,27 @@ from .utils import *
 from .animation_popup import AnimationPopup
 
 
-PROBLEM_FIELDS = ["couriers", "vehicles", "packages"]
+PROBLEM_FIELDS = [
+    "couriers",
+    "vehicles",
+    "packages",
+    "max coord",
+    "time dist coeff",
+    "permission proba",
+    "pickup delivery proba",
+]
+
+
+# "rate from",
+# "rate to",
+# "work limit from",
+# "work limit to",
+# "capacity from",
+# "capacity to",
+# "fuel from",
+# "fuel to",
+# "weight from",
+# "weight to"
 SIMULATION_FIELDS = [
     "solutions",
     "attempts",
@@ -60,20 +80,20 @@ class App:
 
         top_frame = tk.Frame(root, bg="#f0f0f0")
         top_frame.pack(padx=10, pady=(0, 10), fill="both", expand=True)
-        top_frame.grid_columnconfigure(0, weight=1)
+        top_frame.grid_columnconfigure(0, weight=10)
         top_frame.grid_columnconfigure(1, weight=1)
         top_frame.grid_rowconfigure(0, weight=1)
 
-        self.problem_panel = tk.LabelFrame(
+        self.generator_panel = tk.LabelFrame(
             top_frame,
-            text="Problem Data",
+            text="Generator Data",
             bg="#f0f0f0",
             fg="#206020",
             font=("Arial", 14, "bold"),
             padx=15,
             pady=15,
         )
-        self.problem_panel.grid(row=0, column=0, sticky="nsew", padx=10)
+        self.generator_panel.grid(row=0, column=0, sticky="nsew", padx=10)
 
         self.simulation_panel = tk.LabelFrame(
             top_frame,
@@ -139,7 +159,7 @@ class App:
             btn.grid(row=row, column=col, padx=15, pady=10, sticky="")
             setattr(self, f"btn_{text.lower().replace(' ', '_')}", btn)
 
-        self.problem_form = self.setup_problem_frame()
+        self.generator_form = self.setup_generator_frame()
         self.simulation_form = self.setup_simulation_frame()
 
         self.udpate_state()
@@ -182,8 +202,8 @@ class App:
         return self.problem is not None
 
     def udpate_state(self):
-        if self.problem is not None:
-            self.status_label.config(text="Problem loaded/generated and ready.")
+        if self._problem_ready():
+            self.status_label.config(text=self.problem.info())
         else:
             self.status_label.config(text="Problem not loaded or generated.")
 
@@ -192,13 +212,17 @@ class App:
             state=("normal" if self._problem_ready() else "disabled")
         )
 
-    def setup_problem_frame(self):
+    def setup_generator_frame(self):
         defaults = {
             "couriers": 5,
             "vehicles": 3,
             "packages": 20,
+            "max coord": 50,
+            "time dist coeff": 0.5,
+            "permission proba": 1,
+            "pickup delivery proba": 0.5,
         }
-        return self.create_form(self.problem_panel, PROBLEM_FIELDS, defaults)
+        return self.create_form(self.generator_panel, PROBLEM_FIELDS, defaults)
 
     def setup_simulation_frame(self):
         defaults = {
@@ -222,7 +246,7 @@ class App:
                 bg="#f0f0f0",
             ).grid(row=i, column=0, padx=10, pady=8, sticky="e")
 
-            entry = tk.Entry(frame, font=("Arial", 12), width=10)
+            entry = tk.Entry(frame, font=("Arial", 12), width=8)
             entry.grid(row=i, column=1, pady=8)
             entries[field] = entry
 
@@ -308,10 +332,6 @@ class App:
             self.problem = self.initializer.get_problem()
             self.json_path = path
 
-            for field in PROBLEM_FIELDS:
-                entry = self.problem_form[field]
-                set_text(entry, getattr(self.problem, "n_" + field, ""))
-
             self.udpate_state()
         except (FileNotFoundError, PermissionError, OSError, Exception) as e:
             messagebox.showerror(
@@ -319,7 +339,7 @@ class App:
             )
 
     def generate(self):
-        problem_data = validate_form(self.problem_form, PROBLEM_FIELDS)
+        problem_data = validate_form(self.generator_form, PROBLEM_FIELDS)
 
         try:
             couriers = problem_data["couriers"]
