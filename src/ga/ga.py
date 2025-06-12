@@ -1,5 +1,4 @@
 import functools
-import sys
 from copy import deepcopy
 
 import numpy as np
@@ -18,9 +17,6 @@ from .mutations import (
 )
 
 from ga.ga_state import GAState
-
-crossok = 0
-crossnok = 0
 
 
 class GA:
@@ -44,6 +40,9 @@ class GA:
         run(max_iter=1000) -> tuple[Solution, Solution]:
             Execute the genetic algorithm to optimize the solution over a specified number of iterations.
     """
+
+    crossok = 0
+    crossnok = 0
 
     def __init__(
         self,
@@ -106,13 +105,12 @@ class GA:
             tuple: A tuple containing two new solutions (a, b). If crossover fails after 10 attempts,
                    returns (None, None).
         """
-        global crossok, crossnok
         for _ in range(10):
             a, b = self._crossover(s1, s2)
             if a is None and b is None:
-                crossnok += 1
+                self.crossnok += 1
             else:
-                crossok += 1
+                self.crossok += 1
                 return a, b
         return None, None
 
@@ -310,7 +308,7 @@ class GA:
 
         solutions.sort(key=lambda s: self.get_cost(s))
         initial_best = deepcopy(solutions[0])
-        yield GAState(initial_best, crossok, crossok + crossnok)
+        yield GAState(initial_best, self.crossok, self.crossok + self.crossnok)
 
         pairs = [(i, j) for i in range(l // 2) for j in range(i + 1, l // 2)]
 
@@ -320,13 +318,15 @@ class GA:
 
         for i in range(1, max_iter + 1):
             solutions.sort(key=lambda s: self.get_cost(s))
-            yield GAState(deepcopy(solutions[0]), crossok, crossok + crossnok)
+            yield GAState(
+                deepcopy(solutions[0]), self.crossok, self.crossok + self.crossnok
+            )
             new = [self.crossover(solutions[i], solutions[j]) for i, j in get_pairs()]
             new = [t[0] for t in new] + [t[1] for t in new]
             new = [n for n in new if n]
             new = [self.mutation(n) for n in new]
 
-            # print("Crossovers", crossok, "/", crossok + crossnok)
+            # print("Crossovers", self.crossok, "/", self.crossok + self.crossnok)
             # new = [self.mutation(n) for n in new if n]
             # new = [self.mutation(n) for n in solutions[: l // 2]]
             o = 0

@@ -49,11 +49,12 @@ class AnimationPopup(tk.Toplevel):
             mutation_info.append(f"{m.__name__}")
 
         for r, i in enumerate(mutation_info):
+            h = format_mutation_name(i)
             tk.Label(
-                self.mutations_frame, text=i + ":", font=("Arial", 12, "bold")
-            ).grid(row=r, column=0, sticky="w")
+                self.mutations_frame, text=h + ":", font=("Arial", 12, "bold")
+            ).grid(row=r, column=0, padx=10, sticky="w")
             l = tk.Label(self.mutations_frame, text="0/0", font=("Arial", 12, "bold"))
-            l.grid(row=r, column=1, sticky="e")
+            l.grid(row=r, column=1, padx=10, sticky="e")
             self.labels[i] = l
 
         self.info_frame = tk.Frame(self.bottom_frame)
@@ -65,10 +66,12 @@ class AnimationPopup(tk.Toplevel):
             "Best found in",
         ]
         for r, i in enumerate(stats):
-            tk.Label(self.info_frame, text=i + ":", font=("Arial", 12, "bold")).grid(
-                row=r, column=0, sticky="w"
+            tk.Label(
+                self.info_frame, text=i + ":", padx=10, font=("Arial", 12, "bold")
+            ).grid(row=r, column=0, sticky="w")
+            l = tk.Label(
+                self.info_frame, text="0/0", padx=10, font=("Arial", 12, "bold")
             )
-            l = tk.Label(self.info_frame, text="0/0", font=("Arial", 12, "bold"))
             l.grid(row=r, column=1, sticky="e")
             self.labels[i] = l
 
@@ -80,9 +83,9 @@ class AnimationPopup(tk.Toplevel):
             color = get_mpl_color(j)
             canvas.create_oval(1, 1, 11, 11, fill=color, outline=color)
             canvas.grid(row=j, column=0, sticky="w")
-            tk.Label(self.legend_frame, text=f"Vehicle {j}", font=("Arial", 12)).grid(
-                row=j, column=1, sticky="e"
-            )
+            tk.Label(
+                self.legend_frame, text=f"Vehicle {j}", padx=10, font=("Arial", 12)
+            ).grid(row=j, column=1, sticky="e")
 
         self.button_frame = tk.Frame(self.bottom_frame)
         self.button_frame.pack(side="left", expand=True)

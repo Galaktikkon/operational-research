@@ -1,5 +1,3 @@
-import re
-
 import tkinter as tk
 from tkinter import messagebox
 
@@ -153,7 +151,7 @@ class App:
 
             tk.Label(
                 self.mutations_frame,
-                text=re.sub("([a-z])([A-Z])", r"\1 \2", mutation_cls.__name__),
+                text=format_mutation_name(mutation_cls),
                 font=("Arial", 11),
                 bg="#f0f0f0",
                 anchor="w",

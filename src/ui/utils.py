@@ -1,3 +1,4 @@
+import re
 import tkinter as tk
 from tkinter import messagebox
 from problem_initializer import ProblemInitializer
@@ -83,3 +84,8 @@ def draw_solution_to_axis(solution, axis):
 def get_mpl_color(i):
     colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
     return colors[i % len(colors)]
+
+
+def format_mutation_name(m):
+    m = m.__name__ if type(m) != str else m
+    return re.sub("([a-z])([A-Z])", r"\1 \2", m)
