@@ -263,7 +263,7 @@ class App:
         try:
             save_to_json(self.problem, path)
             self.json_path = path
-            messagebox.showinfo("Done", f"Saved the problem successfully to '{path}'")
+            self.udpate_state()
         except (PermissionError, OSError) as e:
             messagebox.showerror(
                 "Error", f"Couldn't save the problem to '{path}':\n{e}"
