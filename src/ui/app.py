@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 
 from generator import Generator
 from ga.mutations import *
@@ -236,56 +236,24 @@ class App:
         return entries
 
     def save(self):
-        self.open_path_popup(
-            "Save JSON File", self.do_save, default_path=self.json_path
+        filename = filedialog.asksaveasfilename(
+            initialdir="config",
+            initialfile="base.json",
+            defaultextension=".json",
+            filetypes=[("JSON", ".json")],
         )
+        if filename:
+            self.do_save(filename)
 
     def load(self):
-        self.open_path_popup(
-            "Load JSON File", self.do_load, default_path=self.json_path
+        filename = filedialog.askopenfilename(
+            initialdir="config",
+            initialfile="base.json",
+            defaultextension=".json",
+            filetypes=[("JSON", ".json")],
         )
-
-    def open_path_popup(self, title, callback, default_path=None):
-        popup = tk.Toplevel(self.root)
-        popup.title(title)
-        popup.geometry("400x150")
-        popup.grab_set()
-        popup.configure(bg="#f0f0f0")
-
-        tk.Label(
-            popup,
-            text="Enter JSON file path:",
-            font=("Arial", 12),
-            bg="#f0f0f0",
-        ).pack(pady=15)
-
-        entry = tk.Entry(popup, font=("Arial", 12), width=40)
-        entry.pack(pady=5, padx=10)
-        entry.focus()
-
-        if default_path:
-            entry.insert(0, default_path)
-
-        def submit():
-            path = entry.get().strip()
-            if not path:
-                messagebox.showerror("Error", "Path cannot be empty!")
-                return
-            callback(path)
-            popup.destroy()
-
-        submit_btn = tk.Button(
-            popup,
-            text="Submit",
-            command=submit,
-            font=("Arial", 12),
-            bg="#4caf50",
-            fg="white",
-            activebackground="#45a049",
-            relief="raised",
-            bd=3,
-        )
-        submit_btn.pack(pady=10)
+        if filename:
+            self.do_load(filename)
 
     def do_save(self, path):
         if not self._problem_ready():
