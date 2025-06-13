@@ -21,9 +21,8 @@ class Graph:
         routes: list[tuple[int, int, float, float]],
         points: np.ndarray,
         warehouse=0,
-        symmetric_data=False,
     ):
-        self.routes = self.__sym(routes) if not symmetric_data else routes
+        self.routes = self.__sym(routes)
         self.warehouse = warehouse
 
         self.n_nodes = len(set([t[0] for t in self.routes]))
@@ -61,6 +60,13 @@ class Graph:
 
         return original + symmetrical + [(a, a, 0, 0) for a in nodes]
 
+    def __asym(self):
+        routes = []
+        for a, b, d, t in self.routes:
+            if (a, b, d, t) not in routes and (b, a, d, t) not in routes:
+                routes.append((a, b, d, t))
+        return routes
+
     @classmethod
     def from_dict(cls, dictionary):
         points = []
@@ -81,7 +87,7 @@ class Graph:
 
         warehouse = dictionary["warehouse"]
 
-        return cls(routes, points, warehouse, True)
+        return cls(routes, points, warehouse)
 
     def to_dict(self):
         points = [{"x": float(x), "y": float(y)} for x, y in self.points]
@@ -92,6 +98,6 @@ class Graph:
                 "distance": float(distance),
                 "time": float(time),
             }
-            for start_node, end_node, distance, time in self.routes
+            for start_node, end_node, distance, time in self.__asym()
         ]
         return {"points": points, "routes": routes, "warehouse": self.warehouse}
