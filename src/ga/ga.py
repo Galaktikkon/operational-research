@@ -1,3 +1,4 @@
+import time
 import functools
 from copy import deepcopy
 
@@ -301,7 +302,7 @@ class GA:
 
         solutions.sort(key=lambda s: self.get_cost(s))
         initial_best = deepcopy(solutions[0])
-        yield GAState(initial_best, self.crossok, self.crossok + self.crossnok)
+        yield GAState(initial_best, self.crossok, self.crossok + self.crossnok, 0)
 
         pairs = [(i, j) for i in range(l // 2) for j in range(i + 1, l // 2)]
 
@@ -309,11 +310,19 @@ class GA:
             index = np.random.randint(low=0, high=len(pairs), size=(l // 4))
             return [pairs[i] for i in index]
 
+        time_sum = 0
+
         for i in range(1, max_iter + 1):
+            start_time = time.process_time()
             solutions.sort(key=lambda s: self.get_cost(s))
+            time_sum += time.process_time() - start_time
             yield GAState(
-                deepcopy(solutions[0]), self.crossok, self.crossok + self.crossnok
+                deepcopy(solutions[0]),
+                self.crossok,
+                self.crossok + self.crossnok,
+                time_sum,
             )
+            start_time = time.process_time()
             new = [self.crossover(solutions[i], solutions[j]) for i, j in get_pairs()]
             new = [t[0] for t in new] + [t[1] for t in new]
             new = [n for n in new if n]
@@ -325,3 +334,4 @@ class GA:
                 o += 1
 
             solutions = solutions[: l // 2] + new
+            time_sum += time.process_time() - start_time

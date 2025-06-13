@@ -29,7 +29,7 @@ SIMULATION_DEFAULTS = {
     "attempts": 1000,
     "iterations": 500,
     "C": 1.2,
-    "alpha": 0.9,
+    "alpha": 0.3,
     "animation delay": 50,
 }
 GENERATOR_SINGLE_FIELDS = [

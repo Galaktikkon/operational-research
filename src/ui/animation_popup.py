@@ -64,11 +64,7 @@ class AnimationPopup(tk.Toplevel):
         self.info_frame = tk.Frame(self.bottom_frame)
         self.info_frame.pack(side="left", expand=True)
 
-        stats = [
-            "Iterations",
-            "Improvements",
-            "Best found in",
-        ]
+        stats = ["Iterations", "Improvements", "Best found in"]
         for r, i in enumerate(stats):
             tk.Label(
                 self.info_frame, text=i + ":", padx=10, font=("Arial", 12, "bold")
@@ -78,6 +74,13 @@ class AnimationPopup(tk.Toplevel):
             )
             l.grid(row=r, column=1, sticky="e")
             self.labels[i] = l
+
+        tk.Label(
+            self.info_frame, text="CPU time:", padx=10, font=("Arial", 12, "bold")
+        ).grid(row=3, column=0, sticky="w")
+        l = tk.Label(self.info_frame, text="0s", padx=10, font=("Arial", 12, "bold"))
+        l.grid(row=3, column=1, sticky="e")
+        self.labels["CPU time"] = l
 
         self.legend_frame = tk.Frame(self.bottom_frame)
         self.legend_frame.pack(side="left", expand=True)
@@ -238,6 +241,7 @@ class AnimationPopup(tk.Toplevel):
         self.labels["Iterations"].config(text=iter_text)
         self.labels["Improvements"].config(text=f"{self.improvements}")
         self.labels["Best found in"].config(text=f"{self.best_found_iteration}")
+        self.labels["CPU time"].config(text=f"{state.cpu_time:.2f}s")
 
         self.labels["Crossovers"].config(text=f"{state.crossok}/{state.crossall}")
         for m in state.mutations:

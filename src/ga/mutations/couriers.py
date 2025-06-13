@@ -88,6 +88,7 @@ class NewCourierMutation(Mutation):
         new_j = self.j
         y_k = self.solution.y_k
 
+        self.old_z_j = self.solution.z_j.copy()
         self.old_x_jv = self.solution.x_jv.copy()
         self.old_y_k = self.solution.y_k.copy()
 
@@ -125,7 +126,6 @@ class NewCourierMutation(Mutation):
         new_i = self.i
         new_j = self.j
         wh = self.problem.graph.warehouse
-
         self.solution.z_j[new_j] = new_i
 
         affected_vehicles = np.unique([y_k[k] for _, k in self.moved_packages])
@@ -161,6 +161,6 @@ class NewCourierMutation(Mutation):
         This method restores the original assignments of couriers to drivers
         after the mutation has been applied.
         """
-        self.solution.z_j[self.j] = -1
+        self.solution.z_j = self.old_z_j
         self.solution.x_jv = self.old_x_jv
         self.solution.y_k = self.old_y_k

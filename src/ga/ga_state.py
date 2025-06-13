@@ -17,3 +17,4 @@ class GAState:
         UnusedVehiclesMutation,
         RouteMutation,
     ]
+    cpu_time: float
