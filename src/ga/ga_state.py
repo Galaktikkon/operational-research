@@ -1,13 +1,7 @@
 from dataclasses import dataclass
 
 from model import Solution
-from ga.mutations import (
-    CouriersMutation,
-    PackagesMutation,
-    RouteMutation,
-    UnusedVehiclesMutation,
-    UsedVehiclesMutation,
-)
+from ga.mutations import *
 
 
 @dataclass
@@ -17,6 +11,7 @@ class GAState:
     crossall: int
     mutations = [
         CouriersMutation,
+        NewCourierMutation,
         PackagesMutation,
         UsedVehiclesMutation,
         UnusedVehiclesMutation,

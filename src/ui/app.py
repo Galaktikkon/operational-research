@@ -2,15 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 
 from generator import Generator
-from ga.mutations import (
-    RouteMutation,
-    UnusedVehiclesMutation,
-    UsedVehiclesMutation,
-    PackagesMutation,
-    CouriersMutation,
-    Mutation,
-)
-
+from ga.mutations import *
 from utils import *
 from .utils import *
 from .constans import *
@@ -22,7 +14,7 @@ class App:
     def __init__(self, root):
         self.root = root
         self.root.title("Main Window")
-        self.root.geometry("1000x640")
+        self.root.geometry("1000x680")
         self.root.configure(bg="#f0f0f0")
 
         self.problem = None
@@ -31,6 +23,7 @@ class App:
 
         self.available_mutations: list[type[Mutation]] = [
             CouriersMutation,
+            NewCourierMutation,
             PackagesMutation,
             RouteMutation,
             UsedVehiclesMutation,

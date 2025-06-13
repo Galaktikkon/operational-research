@@ -14,7 +14,7 @@ class AnimationPopup(tk.Toplevel):
         super().__init__(master)
         self.root = master
         self.title("Simulation Animation")
-        self.geometry("1400x700")
+        self.geometry("1400x720")
 
         self.problem = problem
         self.on_popup_close = on_popup_close
@@ -35,6 +35,7 @@ class AnimationPopup(tk.Toplevel):
 
         mutations: list[type[Mutation]] = [
             CouriersMutation,
+            NewCourierMutation,
             UsedVehiclesMutation,
             UnusedVehiclesMutation,
             PackagesMutation,

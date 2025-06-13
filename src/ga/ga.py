@@ -7,15 +7,7 @@ from model.problem import Problem
 from model.solution import Solution
 from solution_checker import SolutionChecker
 
-from .mutations import (
-    Mutation,
-    RouteMutation,
-    UnusedVehiclesMutation,
-    UsedVehiclesMutation,
-    PackagesMutation,
-    CouriersMutation,
-)
-
+from .mutations import *
 from ga.ga_state import GAState
 
 
@@ -54,6 +46,7 @@ class GA:
         self.initial_population = initial_population
         self.mutations: list[type[Mutation]] = [
             CouriersMutation,
+            NewCourierMutation,
             UsedVehiclesMutation,
             UnusedVehiclesMutation,
             PackagesMutation,
@@ -313,7 +306,7 @@ class GA:
         pairs = [(i, j) for i in range(l // 2) for j in range(i + 1, l // 2)]
 
         def get_pairs():
-            index = np.random.randint(low=0, high=len(pairs), size=(l // 2))
+            index = np.random.randint(low=0, high=len(pairs), size=(l // 4))
             return [pairs[i] for i in index]
 
         for i in range(1, max_iter + 1):
@@ -326,9 +319,6 @@ class GA:
             new = [n for n in new if n]
             new = [self.mutation(n) for n in new]
 
-            # print("Crossovers", self.crossok, "/", self.crossok + self.crossnok)
-            # new = [self.mutation(n) for n in new if n]
-            # new = [self.mutation(n) for n in solutions[: l // 2]]
             o = 0
             while len(new) + l // 2 < l:
                 new.append(solutions[l // 2 + o])
