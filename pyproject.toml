@@ -15,5 +15,7 @@ dependencies = [
     "pyqt5>=5.15.11",
     "ray[dashboard,default]>=2.46.0",
     "ruff>=0.11.4",
+    "scipy>=1.15.3",
+    "seaborn>=0.13.2",
     "tqdm>=4.67.1",
 ]
