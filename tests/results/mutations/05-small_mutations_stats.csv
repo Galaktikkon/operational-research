@@ -1,0 +1,65 @@
+testcase,mutation_suite,cost_mean,cost_std,cost_max,cost_min,cost_median,iterations_mean,iterations_std,iterations_min,iterations_max,iterations_median,time_mean,time_std,time_min,time_max,time_median,cost_func_evals_min,cost_func_evals_max,cost_func_evals_mean,cost_func_evals_std,cost_func_evals_median
+05-small,[],7259.93,14.93,7299.24,7251.76,7251.76,186.1,46.58,132,290,171.5,5.63,1.41,3.94,8.69,5.25,2609,3974,3126.1,446.83,3022.5
+05-small,['UsedVehiclesMutation'],6040.62,590.3,6460.66,4906.94,6357.45,216.2,55.69,139,301,214.0,8.3,2.28,5.09,11.82,8.28,2975,7226,4920.2,1322.06,4828.5
+05-small,['UnusedVehiclesMutation'],5715.23,362.82,6375.8,5392.58,5503.19,218.0,60.34,119,301,220.5,8.42,2.23,5.07,11.67,8.63,2791,7156,5077.5,1395.85,5094.0
+05-small,['CouriersMutation'],7252.03,0.33,7252.63,7251.76,7251.91,189.4,50.25,118,301,195.0,7.46,2.13,5.22,12.93,7.2,2439,4922,3656.2,728.14,3842.5
+05-small,['PackagesMutation'],1581.36,396.0,2205.85,907.46,1569.76,257.9,29.38,205,301,265.5,8.55,0.87,7.1,9.83,8.78,2486,4411,3467.1,654.45,3623.0
+05-small,['RouteMutation'],6577.87,270.99,7175.24,6112.17,6514.26,239.2,41.28,186,301,226.0,10.48,1.69,8.2,13.0,10.25,4320,7173,5718.0,1004.17,5438.0
+05-small,['NewCourierMutation'],5796.21,505.22,6608.43,4960.58,5873.66,215.4,47.53,148,301,205.0,9.39,2.01,6.3,12.94,8.95,3575,7174,5143.6,1091.6,4916.0
+05-small,"['UsedVehiclesMutation', 'UnusedVehiclesMutation']",4889.0,423.23,5697.0,4559.02,4651.46,217.7,41.81,152,301,213.0,8.73,1.86,5.77,12.26,8.68,3433,7077,4952.3,1160.55,5016.5
+05-small,"['UsedVehiclesMutation', 'CouriersMutation']",6142.41,333.86,6509.61,5689.12,6179.49,213.5,61.65,132,301,197.5,8.67,2.56,4.89,12.71,8.2,2440,7225,4717.6,1384.65,4630.0
+05-small,"['UsedVehiclesMutation', 'PackagesMutation']",903.45,167.8,1248.39,633.82,908.13,265.3,27.46,225,301,262.5,9.43,1.01,7.79,10.76,9.36,2843,4775,3463.7,678.63,3061.0
+05-small,"['UsedVehiclesMutation', 'RouteMutation']",5756.34,553.36,6410.02,4454.14,5906.0,249.9,63.07,149,301,296.5,10.82,2.77,6.52,13.45,12.63,3587,7217,5976.8,1488.08,7025.5
+05-small,"['UsedVehiclesMutation', 'NewCourierMutation']",5286.34,641.47,6086.97,4115.61,5369.82,258.2,45.08,176,301,269.0,11.55,2.07,7.25,13.91,11.8,4249,7226,6063.7,991.2,6134.5
+05-small,"['UnusedVehiclesMutation', 'CouriersMutation']",5787.42,367.55,6274.24,5399.99,5722.08,204.9,60.4,128,301,193.0,8.42,2.39,5.47,11.86,8.09,2941,6190,4536.8,1142.05,4449.5
+05-small,"['UnusedVehiclesMutation', 'PackagesMutation']",1038.91,205.2,1423.93,775.54,954.4,268.4,35.74,200,301,278.0,9.89,1.44,7.24,11.44,10.27,3014,6272,4580.7,1017.92,4485.0
+05-small,"['UnusedVehiclesMutation', 'RouteMutation']",5278.26,825.8,6461.81,4418.1,4908.02,222.9,62.07,121,301,221.0,9.31,2.64,4.93,12.57,9.22,2909,7127,5294.1,1430.11,5280.0
+05-small,"['UnusedVehiclesMutation', 'NewCourierMutation']",5328.06,319.56,5754.49,4748.71,5387.35,225.4,57.8,132,301,227.5,10.17,2.7,5.63,14.07,10.29,2961,7225,5299.6,1336.34,5470.0
+05-small,"['CouriersMutation', 'PackagesMutation']",1767.85,605.29,2946.28,770.72,1733.76,286.2,26.79,212,301,301.0,10.5,1.08,7.84,11.42,10.79,3550,5411,4524.4,569.15,4590.0
+05-small,"['CouriersMutation', 'RouteMutation']",6414.14,152.57,6497.36,6105.27,6486.66,238.7,38.27,178,301,233.5,10.27,1.47,7.71,12.75,10.25,4283,6848,5656.3,864.91,5597.0
+05-small,"['CouriersMutation', 'NewCourierMutation']",5682.36,369.45,6298.98,5034.11,5699.02,234.7,61.4,149,301,256.0,10.47,2.79,6.11,13.6,11.5,3242,7225,5585.4,1501.69,6104.5
+05-small,"['PackagesMutation', 'RouteMutation']",1768.58,743.17,2977.19,792.44,1552.98,294.2,13.78,255,301,301.0,11.41,0.7,9.65,12.3,11.69,4830,6375,5720.3,575.04,5784.0
+05-small,"['PackagesMutation', 'NewCourierMutation']",1215.41,293.25,1670.43,789.71,1122.76,267.0,34.9,198,301,275.0,11.15,1.44,8.53,12.77,11.45,3683,6087,5103.2,750.69,5047.5
+05-small,"['RouteMutation', 'NewCourierMutation']",6335.74,254.62,6621.24,5727.96,6417.78,238.3,58.73,146,301,247.5,10.65,2.74,6.31,14.0,10.87,3529,7213,5725.6,1392.67,5954.0
+05-small,"['UsedVehiclesMutation', 'UnusedVehiclesMutation', 'CouriersMutation']",5344.13,407.36,5655.26,4554.39,5545.01,239.4,62.78,157,301,252.5,10.12,2.75,6.4,13.06,10.53,3578,7208,5643.9,1532.86,5825.5
+05-small,"['UsedVehiclesMutation', 'UnusedVehiclesMutation', 'PackagesMutation']",861.64,131.56,991.93,580.09,923.97,288.3,14.22,263,301,296.0,11.0,0.73,9.74,11.91,11.05,3904,6514,4669.3,780.63,4305.0
+05-small,"['UsedVehiclesMutation', 'UnusedVehiclesMutation', 'RouteMutation']",4747.43,565.82,5399.74,3953.9,4766.11,271.8,42.62,171,301,301.0,11.71,1.74,7.71,13.23,12.58,4125,7215,6499.0,997.17,7141.0
+05-small,"['UsedVehiclesMutation', 'UnusedVehiclesMutation', 'NewCourierMutation']",4624.67,495.87,5673.19,3609.5,4634.85,248.3,58.38,151,301,277.0,11.42,2.67,7.22,14.5,12.53,3645,7225,5896.6,1334.94,6446.5
+05-small,"['UsedVehiclesMutation', 'CouriersMutation', 'PackagesMutation']",891.88,87.56,1066.25,778.39,913.71,276.3,35.11,221,301,301.0,10.32,1.27,8.28,11.5,10.9,3035,5187,4071.8,681.37,3969.5
+05-small,"['UsedVehiclesMutation', 'CouriersMutation', 'RouteMutation']",5752.66,444.97,5910.9,4417.96,5902.02,266.8,42.22,195,301,295.5,11.46,1.86,8.12,13.17,12.56,4686,7213,6395.2,1001.56,7072.5
+05-small,"['UsedVehiclesMutation', 'CouriersMutation', 'NewCourierMutation']",5087.19,743.34,6160.38,4048.11,5038.58,270.1,48.28,174,301,301.0,12.22,2.24,7.73,14.37,13.41,4195,7226,6436.9,1183.99,7205.0
+05-small,"['UsedVehiclesMutation', 'PackagesMutation', 'RouteMutation']",930.83,260.95,1616.46,706.21,909.4,298.8,4.75,286,301,301.0,11.84,0.27,11.39,12.28,11.88,4833,6587,5965.6,540.96,6123.5
+05-small,"['UsedVehiclesMutation', 'PackagesMutation', 'NewCourierMutation']",940.3,107.96,1197.1,792.41,916.56,291.5,20.08,239,301,301.0,12.27,1.07,9.3,13.23,12.62,3987,6603,5610.7,754.1,5789.5
+05-small,"['UsedVehiclesMutation', 'RouteMutation', 'NewCourierMutation']",4977.4,568.97,5921.69,4000.65,4890.12,269.9,45.1,180,301,301.0,12.42,2.17,8.19,14.25,13.68,4339,7225,6478.4,1069.86,7192.5
+05-small,"['UnusedVehiclesMutation', 'CouriersMutation', 'PackagesMutation']",1140.98,355.42,1949.42,734.87,1043.18,281.9,24.74,241,301,301.0,10.81,0.99,9.07,12.08,11.14,3785,6303,5119.1,840.63,5213.0
+05-small,"['UnusedVehiclesMutation', 'CouriersMutation', 'RouteMutation']",5953.27,514.63,6417.2,5052.31,6257.62,240.6,51.82,155,301,242.0,10.29,2.21,6.48,12.86,10.47,3729,7176,5765.5,1218.45,5813.5
+05-small,"['UnusedVehiclesMutation', 'CouriersMutation', 'NewCourierMutation']",5434.49,237.32,5880.24,5057.51,5383.14,240.8,54.97,153,301,240.0,11.23,2.93,6.75,15.29,11.03,3694,7222,5747.5,1324.59,5731.5
+05-small,"['UnusedVehiclesMutation', 'PackagesMutation', 'RouteMutation']",1373.43,506.04,2213.98,571.95,1292.03,298.9,6.3,280,301,301.0,12.2,0.37,11.36,12.75,12.24,5833,7074,6588.9,431.15,6729.0
+05-small,"['UnusedVehiclesMutation', 'PackagesMutation', 'NewCourierMutation']",974.89,243.18,1521.3,681.36,921.52,300.6,0.92,298,301,301.0,12.72,0.29,12.27,13.13,12.76,5562,6820,6185.9,419.58,6119.5
+05-small,"['UnusedVehiclesMutation', 'RouteMutation', 'NewCourierMutation']",5618.4,744.75,6417.51,4442.66,5637.91,254.2,57.5,167,301,300.5,11.61,2.66,7.41,14.18,13.43,4030,7222,6101.2,1364.71,7182.5
+05-small,"['CouriersMutation', 'PackagesMutation', 'RouteMutation']",1377.61,427.9,2186.11,755.69,1231.79,297.5,8.43,273,301,301.0,12.03,0.36,11.6,12.77,11.94,5236,7055,6189.7,563.46,6147.5
+05-small,"['CouriersMutation', 'PackagesMutation', 'NewCourierMutation']",1452.6,542.81,2256.17,682.57,1393.36,281.5,26.12,229,301,301.0,11.71,0.97,10.06,12.67,12.35,4632,6327,5496.6,549.14,5625.0
+05-small,"['CouriersMutation', 'RouteMutation', 'NewCourierMutation']",6136.79,402.26,6493.63,5345.17,6255.05,278.6,40.83,181,301,301.0,12.38,1.84,7.93,13.66,13.23,4355,7224,6673.7,971.54,7192.0
+05-small,"['PackagesMutation', 'RouteMutation', 'NewCourierMutation']",1842.33,479.8,2559.26,948.16,1959.07,298.5,7.5,276,301,301.0,13.07,0.45,11.83,13.58,13.17,5932,7029,6566.7,377.64,6605.5
+05-small,"['UsedVehiclesMutation', 'UnusedVehiclesMutation', 'CouriersMutation', 'PackagesMutation']",896.22,247.26,1574.02,669.23,832.15,281.0,27.19,233,301,301.0,11.55,1.2,9.25,12.59,12.06,3853,6030,5050.9,644.63,5152.5
+05-small,"['UsedVehiclesMutation', 'UnusedVehiclesMutation', 'CouriersMutation', 'RouteMutation']",5119.49,692.84,5778.87,3953.11,5463.39,255.5,40.63,189,301,246.5,11.67,2.11,8.9,14.79,10.93,4561,7205,6125.5,944.97,5939.5
+05-small,"['UsedVehiclesMutation', 'UnusedVehiclesMutation', 'CouriersMutation', 'NewCourierMutation']",4521.58,488.86,5365.07,3609.75,4554.31,221.9,53.9,135,301,239.0,10.95,2.73,5.66,14.65,11.9,2986,7145,5192.9,1326.15,5331.0
+05-small,"['UsedVehiclesMutation', 'UnusedVehiclesMutation', 'PackagesMutation', 'RouteMutation']",1113.42,393.43,1727.4,599.89,913.19,300.7,0.9,298,301,301.0,12.5,0.33,12.09,13.07,12.5,5829,7102,6550.6,383.75,6441.0
+05-small,"['UsedVehiclesMutation', 'UnusedVehiclesMutation', 'PackagesMutation', 'NewCourierMutation']",880.84,72.31,964.19,747.27,880.63,301.0,0.0,301,301,301.0,11.89,0.51,11.14,12.46,11.92,5480,7020,6305.2,492.99,6516.5
+05-small,"['UsedVehiclesMutation', 'UnusedVehiclesMutation', 'RouteMutation', 'NewCourierMutation']",4848.38,653.95,5517.17,3779.66,5177.01,255.8,49.53,184,301,281.5,11.71,2.29,8.37,14.15,12.29,4413,7223,6134.9,1171.79,6741.5
+05-small,"['UsedVehiclesMutation', 'CouriersMutation', 'PackagesMutation', 'RouteMutation']",1056.69,451.84,2146.52,651.4,893.47,301.0,0.0,301,301,301.0,12.18,0.35,11.4,12.77,12.17,5447,7024,6327.3,427.62,6414.5
+05-small,"['UsedVehiclesMutation', 'CouriersMutation', 'PackagesMutation', 'NewCourierMutation']",963.48,323.73,1900.86,735.26,919.64,283.1,28.56,207,301,301.0,12.43,1.31,9.32,14.27,12.75,3689,6424,5381.7,784.6,5658.0
+05-small,"['UsedVehiclesMutation', 'CouriersMutation', 'RouteMutation', 'NewCourierMutation']",4972.27,690.37,5906.14,4194.14,4670.03,264.2,46.08,168,301,276.0,12.74,2.45,7.79,15.54,13.76,4054,7225,6340.6,1092.21,6642.5
+05-small,"['UsedVehiclesMutation', 'PackagesMutation', 'RouteMutation', 'NewCourierMutation']",1433.12,408.92,2076.71,597.39,1487.33,301.0,0.0,301,301,301.0,13.21,0.42,12.63,13.95,13.25,6262,7115,6720.1,281.61,6823.0
+05-small,"['UnusedVehiclesMutation', 'CouriersMutation', 'PackagesMutation', 'RouteMutation']",1037.24,430.64,2164.86,585.33,976.62,301.0,0.0,301,301,301.0,12.28,0.29,11.81,12.78,12.28,6473,7133,6668.3,206.74,6582.0
+05-small,"['UnusedVehiclesMutation', 'CouriersMutation', 'PackagesMutation', 'NewCourierMutation']",1028.89,257.92,1719.36,706.41,990.25,297.2,8.22,275,301,301.0,12.99,0.38,12.42,13.39,13.21,5470,6906,6228.5,445.16,6264.0
+05-small,"['UnusedVehiclesMutation', 'CouriersMutation', 'RouteMutation', 'NewCourierMutation']",5487.0,452.57,6205.08,4984.69,5486.82,278.4,39.88,188,301,301.0,12.71,1.88,8.53,14.31,13.46,4530,7223,6647.9,949.56,7089.0
+05-small,"['UnusedVehiclesMutation', 'PackagesMutation', 'RouteMutation', 'NewCourierMutation']",1047.25,272.99,1544.46,704.09,922.09,301.0,0.0,301,301,301.0,12.69,0.37,12.07,13.27,12.62,6435,7027,6750.3,216.69,6721.5
+05-small,"['CouriersMutation', 'PackagesMutation', 'RouteMutation', 'NewCourierMutation']",1668.01,587.68,2638.22,616.35,1659.49,292.8,18.08,243,301,301.0,12.82,1.14,9.93,13.74,13.35,4942,6998,6432.7,701.91,6699.5
+05-small,"['UsedVehiclesMutation', 'UnusedVehiclesMutation', 'CouriersMutation', 'PackagesMutation', 'RouteMutation']",1142.86,408.55,2030.2,760.86,952.36,301.0,0.0,301,301,301.0,12.56,0.39,11.77,13.12,12.59,5443,7065,6564.6,501.6,6776.5
+05-small,"['UsedVehiclesMutation', 'UnusedVehiclesMutation', 'CouriersMutation', 'PackagesMutation', 'NewCourierMutation']",946.25,102.04,1067.21,697.7,953.57,299.5,4.5,286,301,301.0,12.95,0.34,12.24,13.49,13.02,5492,7075,6168.1,593.57,5874.5
+05-small,"['UsedVehiclesMutation', 'UnusedVehiclesMutation', 'CouriersMutation', 'RouteMutation', 'NewCourierMutation']",4701.97,664.41,5826.33,3955.02,4753.04,289.3,17.96,258,301,301.0,13.09,0.97,11.56,14.2,13.49,6201,7226,6920.8,420.66,7182.5
+05-small,"['UsedVehiclesMutation', 'UnusedVehiclesMutation', 'PackagesMutation', 'RouteMutation', 'NewCourierMutation']",1060.66,404.11,2024.87,599.09,891.47,301.0,0.0,301,301,301.0,12.82,0.45,12.29,13.84,12.7,6615,7186,6883.2,190.06,6904.5
+05-small,"['UsedVehiclesMutation', 'CouriersMutation', 'PackagesMutation', 'RouteMutation', 'NewCourierMutation']",1107.68,256.59,1563.36,737.54,1077.39,301.0,0.0,301,301,301.0,12.77,0.31,12.32,13.36,12.8,6437,7085,6710.1,202.68,6670.5
+05-small,"['UnusedVehiclesMutation', 'CouriersMutation', 'PackagesMutation', 'RouteMutation', 'NewCourierMutation']",1445.96,654.13,3069.53,636.59,1321.64,301.0,0.0,301,301,301.0,13.5,0.75,12.49,15.26,13.52,6049,7199,6746.3,345.31,6901.0
+05-small,"['UsedVehiclesMutation', 'UnusedVehiclesMutation', 'CouriersMutation', 'PackagesMutation', 'RouteMutation', 'NewCourierMutation']",1010.89,359.33,1769.05,617.12,924.74,298.4,7.8,275,301,301.0,13.33,0.71,12.39,14.53,13.03,5842,7124,6801.3,373.02,6905.0
