@@ -1,0 +1,266 @@
+{
+  "couriers": [
+    {
+      "hourly_rate": 47.0,
+      "work_limit": 240.0
+    }
+  ],
+  "vehicles": [
+    {
+      "capacity": 28.0,
+      "fuel_consumption": 17.8
+    },
+    {
+      "capacity": 63.0,
+      "fuel_consumption": 1.15
+    },
+    {
+      "capacity": 81.0,
+      "fuel_consumption": 0.65
+    },
+    {
+      "capacity": 98.0,
+      "fuel_consumption": 6.44
+    },
+    {
+      "capacity": 39.0,
+      "fuel_consumption": 4.58
+    }
+  ],
+  "packages": [
+    {
+      "address": 4,
+      "weight": 4.75,
+      "start_time": 0.0,
+      "end_time": 6000.0,
+      "type": "delivery"
+    },
+    {
+      "address": 3,
+      "weight": 5.53,
+      "start_time": 0.0,
+      "end_time": 6000.0,
+      "type": "pickup"
+    },
+    {
+      "address": 3,
+      "weight": 4.33,
+      "start_time": 0.0,
+      "end_time": 6000.0,
+      "type": "delivery"
+    },
+    {
+      "address": 2,
+      "weight": 5.57,
+      "start_time": 0.0,
+      "end_time": 6000.0,
+      "type": "delivery"
+    },
+    {
+      "address": 1,
+      "weight": 3.93,
+      "start_time": 0.0,
+      "end_time": 6000.0,
+      "type": "pickup"
+    }
+  ],
+  "permissions": [
+    {
+      "courier": 0,
+      "vehicle": 0
+    },
+    {
+      "courier": 0,
+      "vehicle": 1
+    },
+    {
+      "courier": 0,
+      "vehicle": 2
+    },
+    {
+      "courier": 0,
+      "vehicle": 3
+    },
+    {
+      "courier": 0,
+      "vehicle": 4
+    }
+  ],
+  "graph": {
+    "points": [
+      {
+        "x": 13.35269660389885,
+        "y": 25.825858435150217
+      },
+      {
+        "x": 4.5042254601082465,
+        "y": 7.577314340865954
+      },
+      {
+        "x": 25.085509999121047,
+        "y": 19.387928659071342
+      },
+      {
+        "x": 22.066902638820856,
+        "y": 36.113211854463216
+      },
+      {
+        "x": 26.272982850202503,
+        "y": 9.967412662880037
+      }
+    ],
+    "routes": [
+      {
+        "start_node": 0,
+        "end_node": 1,
+        "distance": 20.28,
+        "time": 15.56
+      },
+      {
+        "start_node": 0,
+        "end_node": 2,
+        "distance": 13.38,
+        "time": 10.87
+      },
+      {
+        "start_node": 0,
+        "end_node": 3,
+        "distance": 13.48,
+        "time": 8.22
+      },
+      {
+        "start_node": 0,
+        "end_node": 4,
+        "distance": 20.46,
+        "time": 17.82
+      },
+      {
+        "start_node": 1,
+        "end_node": 2,
+        "distance": 23.73,
+        "time": 30.85
+      },
+      {
+        "start_node": 1,
+        "end_node": 3,
+        "distance": 33.51,
+        "time": 42.71
+      },
+      {
+        "start_node": 1,
+        "end_node": 4,
+        "distance": 21.9,
+        "time": 30.24
+      },
+      {
+        "start_node": 2,
+        "end_node": 3,
+        "distance": 17.0,
+        "time": 19.21
+      },
+      {
+        "start_node": 2,
+        "end_node": 4,
+        "distance": 9.5,
+        "time": 13.59
+      },
+      {
+        "start_node": 3,
+        "end_node": 4,
+        "distance": 26.48,
+        "time": 16.01
+      },
+      {
+        "start_node": 1,
+        "end_node": 0,
+        "distance": 20.28,
+        "time": 15.56
+      },
+      {
+        "start_node": 2,
+        "end_node": 0,
+        "distance": 13.38,
+        "time": 10.87
+      },
+      {
+        "start_node": 3,
+        "end_node": 0,
+        "distance": 13.48,
+        "time": 8.22
+      },
+      {
+        "start_node": 4,
+        "end_node": 0,
+        "distance": 20.46,
+        "time": 17.82
+      },
+      {
+        "start_node": 2,
+        "end_node": 1,
+        "distance": 23.73,
+        "time": 30.85
+      },
+      {
+        "start_node": 3,
+        "end_node": 1,
+        "distance": 33.51,
+        "time": 42.71
+      },
+      {
+        "start_node": 4,
+        "end_node": 1,
+        "distance": 21.9,
+        "time": 30.24
+      },
+      {
+        "start_node": 3,
+        "end_node": 2,
+        "distance": 17.0,
+        "time": 19.21
+      },
+      {
+        "start_node": 4,
+        "end_node": 2,
+        "distance": 9.5,
+        "time": 13.59
+      },
+      {
+        "start_node": 4,
+        "end_node": 3,
+        "distance": 26.48,
+        "time": 16.01
+      },
+      {
+        "start_node": 0,
+        "end_node": 0,
+        "distance": 0.0,
+        "time": 0.0
+      },
+      {
+        "start_node": 1,
+        "end_node": 1,
+        "distance": 0.0,
+        "time": 0.0
+      },
+      {
+        "start_node": 2,
+        "end_node": 2,
+        "distance": 0.0,
+        "time": 0.0
+      },
+      {
+        "start_node": 3,
+        "end_node": 3,
+        "distance": 0.0,
+        "time": 0.0
+      },
+      {
+        "start_node": 4,
+        "end_node": 4,
+        "distance": 0.0,
+        "time": 0.0
+      }
+    ],
+    "warehouse": 0
+  }
+}
